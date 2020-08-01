@@ -20,6 +20,11 @@ Save results in _editLabels.tif
 		[fixed] We need a .csv to tell us the number of labels coming out of main analysis.
 		This way we can make a new mask WITHOUT new labels created here
 		
+TRoubleshooting:
+	For conda, we need
+	```
+	conda install -c conda-forge contextlib2
+	```
 """
 
 import os, json
@@ -31,7 +36,8 @@ import skimage
 import napari
 import tifffile
 
-from contextlib import nullcontext # to have conditional 'with'
+# 20200731, switched to contextlib2from contextlib2 import nullcontext # to have conditional 'with'
+
 
 #from vascDen import myGetDefaultStackDict # vascDen.py needs to be in same folder
 import vascDen

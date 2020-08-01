@@ -96,17 +96,24 @@ def mySave(saveBase, saveBase2, stackDict, tiffHeader, paramDict):
 		# rebuild stack including all 0 images above/below firstSlice/lastSlice
 		if saveBase2:
 			#dataCopy = data.copy()
-			firstSlice = paramDict['firstSlice'] - 1
+			firstSlice = paramDict['firstSlice']
 			lastSlice = paramDict['lastSlice'] # needs to be relative to num slices
 			
-			origNumSlices = paramDict['zOrigPixel']
-			
-			padTop = firstSlice - 1
-			padBottom = origNumSlices - lastSlice + 1
-			
-			dataPadded = np.pad(data, ((padTop,padBottom), (0,0), (0,0)), 'constant', constant_values=0)  
+			# 20200731, allowing no firstslice/lastslice
+			if firstSlice is None or lastSLice is None:
+				dataPadded = data
+			else:
+				firstSlice = firstSlice - 1 # 20200731, not sure why?
+				
+				origNumSlices = paramDict['zOrigPixel']
+				
+				padTop = firstSlice - 1
+				padBottom = origNumSlices - lastSlice + 1
+				
+				dataPadded = np.pad(data, ((padTop,padBottom), (0,0), (0,0)), 'constant', constant_values=0)  
+
 			savePath2 = saveBase2 + '_' + k + '.tif'
-			print('    ', name, 'savePath2:', savePath2)
+			#print('    ', name, 'savePath2:', savePath2)
 			bimpy.util.bTiffFile.imsave(savePath2, dataPadded, tifHeader=tiffHeader, overwriteExisting=True)	
 		
 ################################################################################
@@ -219,7 +226,7 @@ def updateMasterCellDB(masterFilePath, filename, paramDict):
 		
 	for k,v in paramDict.items():
 		if not k in df.columns:
-			print('    *** updateMasterCellDB() is appending column named:', k)
+			#print('    *** updateMasterCellDB() is appending column named:', k)
 			df[k] = ""
 		
 		df.loc[df['uFilename'] == filename, k] = str(v)
@@ -300,15 +307,19 @@ def pruneStackData(masterFilePath, filename, stackData):
 	else:
 		print('ERROR: pruneStackData() did not read df from masterFilePath:', masterFilePath)
 	
-	if uInclude is None or firstSlice is None or lastSlice is None:
-			stackData = None
+	# 20200731, switching this to default to entire stack
+	#if uInclude is None or firstSlice is None or lastSlice is None:
+	#		stackData = None
+	if firstSlice is None or lastSLice is None:
+		pass
 	elif firstSlice > 0 and lastSlice < numSlices - 1:
 		#print('  ', 'pruning stackData slices')
 		_printStackParams(' from stackData', stackData)	
 		stackData = stackData[firstSlice:lastSlice+1,:,:] # remember +1 !!!!!
 		_printStackParams(' pruned stackData', stackData)	
 	else:
-		stackData = None
+		#stackData = None
+		pass
 		
 	return stackData, firstSlice, lastSlice
 	
@@ -629,6 +640,7 @@ if __name__ == '__main__':
 	# read master_cell_db.csv (same folder as this file, for now)
 	#masterFilePath = 'master_cell_db.csv'
 	masterFilePath = '20200518_cell_db.csv'
+	masterFilePath = '20200717_cell_db.csv'
 	
 	parser = argparse.ArgumentParser(description = 'Process a vascular stack')
 	parser.add_argument('tifPath', nargs='*', default='', help='path to original .tif file')
@@ -643,6 +655,8 @@ if __name__ == '__main__':
 		#path = '/Users/cudmore/box/data/nathan/20200116/20190116__A01_G001_0010_ch1.tif'
 		#path = '/Users/cudmore/box/data/nathan/20200116/20190116__A01_G001_0011_ch1.tif'
 	
+		path = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_0001_ch2.tif'
+		
 	trimPercent = 15
 	myRun(path, trimPercent, masterFilePath)
 	

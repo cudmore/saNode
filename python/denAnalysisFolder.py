@@ -9,10 +9,12 @@ Usage:
         python denAnalysisFolder.py 2 vascDen 15 /Users/cudmore/box/data/nathan/20200518
 	
 """
-import os, argparse
+import os, argparse, time
 
 from cellDen import myRun as cellDenRun
 from vascDen import myRun as vasDenRun
+
+import multiprocessing as mp
 
 def densityFolder(path, channel, analysisType, trimPercent):
 	"""
@@ -21,6 +23,8 @@ def densityFolder(path, channel, analysisType, trimPercent):
 	analysisType: (cellDen, vascDen)
 	"""
 	
+	startTime = time.time()
+
 	if channel == 1:
 		chStr = '_ch1'
 	elif channel == 2:
@@ -54,12 +58,41 @@ def densityFolder(path, channel, analysisType, trimPercent):
 	numFiles = len(filePathList)
 
 	
+	# run in series
+	'''
 	for idx, filePath in enumerate(filePathList):
 		print('\n====== file', idx+1, 'of', numFiles, 'path:', filePath)
 		if analysisType == 'cellDen':
 			cellDenRun(filePath, trimPercent, masterFilePath)
 		elif analysisType == 'vascDen':
 			vasDenRun(filePath, trimPercent, masterFilePath)
+	'''
+	
+	#
+	# parallel
+	cpuCount = mp.cpu_count()
+	cpuCount -= 2
+	pool = mp.Pool(processes=cpuCount)
+	pResults = []
+
+	for idx, filePath in enumerate(filePathList):
+		if analysisType == 'vascDen':
+			args = [filePath, trimPercent, masterFilePath]
+			oneAnswer = pool.apply_async(vasDenRun, args=args)
+			pResults.append(oneAnswer)
+		elif analysisType == 'cellDen':
+			args = [filePath, trimPercent, masterFilePath]
+			oneAnswer = pool.apply_async(cellDenRun, args=args)
+			pResults.append(oneAnswer)
+
+	# run in parallel
+	for pResult in pResults:
+		oneResult = pResult.get()
+		#if tiffFileInfo is not None:
+		#	fileDictList.append(tiffFileInfo)
+
+	stopTime = time.time()
+	print('finished in', round(stopTime-startTime,2), 'seconds')
 		
 ################################################################################
 if __name__ == '__main__':
@@ -67,6 +100,9 @@ if __name__ == '__main__':
 	# read master_cell_db.csv (same folder as this file, for now)
 	masterFilePath = 'master_cell_db.csv'
 	masterFilePath = '20200518_cell_db.csv'
+
+	masterFilePath = '20200717_cell_db.csv'
+
 	#dfMasterCellDB = pd.read_csv('master_cell_db.csv')
 	
 	parser = argparse.ArgumentParser(description = 'Process a vascular stack')
@@ -90,7 +126,7 @@ if __name__ == '__main__':
 		path = args.analysisPath[0]		
 
 	# HARD CODED
-	#trimPercent = 15
+	trimPercent = 15
 	
 	print('crossChannelFolder channe:', channel, 'analysisType:', analysisType, 'path:', path)
 	densityFolder(path, channel, analysisType, trimPercent)
