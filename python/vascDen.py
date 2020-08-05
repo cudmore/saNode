@@ -310,7 +310,7 @@ def pruneStackData(masterFilePath, filename, stackData):
 	# 20200731, switching this to default to entire stack
 	#if uInclude is None or firstSlice is None or lastSlice is None:
 	#		stackData = None
-	if firstSlice is None or lastSLice is None:
+	if firstSlice is None or lastSlice is None:
 		pass
 	elif firstSlice > 0 and lastSlice < numSlices - 1:
 		#print('  ', 'pruning stackData slices')
@@ -424,6 +424,8 @@ def myRun(path, trimPercent, masterFilePath):
 	"""
 	
 	print('vascDen.myRun() path:', path)
+	
+	verbose = False
 	
 	filename, paramDict, stackDict = setupAnalysis(path, trimPercent, masterFilePath=masterFilePath)
 	
@@ -568,6 +570,9 @@ def myRun(path, trimPercent, masterFilePath):
 	# convex hull
 	# this is tricky, we are running in different environment
 	# best we can do to share data is to save and then reload
+	
+	# removed 20200731, was giving error when run in parallel
+	'''
 	pythonPath = os.path.abspath('my_hull_env/bin/python')
 	if os.path.isfile(pythonPath):
 		finalMaskPath = saveBase + '_finalMask.tif'
@@ -588,6 +593,7 @@ def myRun(path, trimPercent, masterFilePath):
 	scale = (paramDict['tiffHeader']['zVoxel'], paramDict['tiffHeader']['xVoxel'], paramDict['tiffHeader']['yVoxel'])
 	edtData = myDistanceMap(maskStack, hullMask, scale=scale)
 	stackDict['finalMask_edt']['data'] = edtData
+	'''
 	
 	#
 	# if there is a _labeled_edited.tif we need to remove it !!!
@@ -595,9 +601,10 @@ def myRun(path, trimPercent, masterFilePath):
 	if os.path.isfile(labeledEditedPath):
 		# move
 		bakLabeledEditedPath = labeledEditedPath + '.bak'
-		print('=== MOVING EDITED LABELS')
+		print('\n=== MOVING EDITED LABELS')
 		print('      from:', labeledEditedPath)
 		print('      to:', bakLabeledEditedPath)
+		print('\n')
 		os.rename(labeledEditedPath, bakLabeledEditedPath)
 		
 	#
@@ -655,7 +662,7 @@ if __name__ == '__main__':
 		#path = '/Users/cudmore/box/data/nathan/20200116/20190116__A01_G001_0010_ch1.tif'
 		#path = '/Users/cudmore/box/data/nathan/20200116/20190116__A01_G001_0011_ch1.tif'
 	
-		path = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_0001_ch2.tif'
+		path = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_0014_ch2.tif'
 		
 	trimPercent = 15
 	myRun(path, trimPercent, masterFilePath)

@@ -32,6 +32,7 @@ def densityFolder(path, channel, analysisType, trimPercent):
 
 	#masterFilePath = 'master_cell_db.csv'
 	masterFilePath = '20200518_cell_db.csv'
+	masterFilePath = '20200717_cell_db.csv'
 	
 	filePathList = []
 	for file in os.listdir(path):
@@ -71,7 +72,7 @@ def densityFolder(path, channel, analysisType, trimPercent):
 	#
 	# parallel
 	cpuCount = mp.cpu_count()
-	cpuCount -= 2
+	cpuCount -= 1 # should get by with -1, but because of memory should use -2 or -3
 	pool = mp.Pool(processes=cpuCount)
 	pResults = []
 

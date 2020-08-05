@@ -464,6 +464,8 @@ if __name__ == '__main__':
 		pathToRawTiff = '/Users/cudmore/box/data/nathan/20200116/20190116__A01_G001_0014_ch1.tif'
 		pathToRawTiff = '/Users/cudmore/box/data/nathan/20200518/20200518__A01_G001_0003_ch2.tif'
 		
+		pathToRawTiff = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_0001_ch2.tif'
+		
 	myLabelEdit(pathToRawTiff, withContext=True, verbose=True)
 	
 	

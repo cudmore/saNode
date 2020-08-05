@@ -51,6 +51,8 @@ def myFileRead(filename,commonShape, trimPixels):
 	else:
 		stackData = np.zeros(commonShape, dtype=np.uint8)
 	if trimPixels is not None:
+		if len(stackData.shape) != 3:
+			print('ERROR: myFileRead() shape is', len(stackData.shape), 'path:', filename)
 		thisHeight = stackData.shape[1] - trimPixels
 		thisWidth = stackData.shape[2] - trimPixels
 		stackData = stackData[:, 0:thisHeight, 0:thisWidth]
