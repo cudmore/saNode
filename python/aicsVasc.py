@@ -13,6 +13,7 @@ ERROR: aicsimageprocessing 0.7.3 has requirement aicsimageio>=3.1.2, but you'll 
 
 import os, sys, time, glob, logging
 
+import copy
 from collections import OrderedDict
 from datetime import datetime
 
@@ -21,55 +22,19 @@ logging.getLogger().setLevel(logging.INFO)
 import numpy as np
 import scipy
 
-#import tifffile
-
 import multiprocessing as mp
-#import dask
-#import dask.array as da
-
-#import napari
 
 import bimpy
 
+import aicsUtil
+
 from aicssegmentation.core.vessel import filament_3d_wrapper
-from aicssegmentation.core.pre_processing_utils import edge_preserving_smoothing_3d, image_smoothing_gaussian_3d
+from aicssegmentation.core.pre_processing_utils import edge_preserving_smoothing_3d
 
 from my_suggest_normalization_param import my_suggest_normalization_param # clone of aics segmentation
 from my_intensity_normalization import my_intensity_normalization
 
-def _printStackParams(name, myStack):
-	print('  ', name, myStack.shape, myStack.dtype, 'dtype.char:', myStack.dtype.char,
-		'min:', np.min(myStack),
-		'max:', np.max(myStack),
-		'mean:', np.mean(myStack),
-		'std:', np.std(myStack),
-		)
-
-"""
-raw
-labeled (also save by manual edits)
-labeled_removed # small labels
-labeled_removed_manual # after manual edits, resave _labeled (should be able to revert)
-mask
-hull
-edt
-"""
-
-def myGetDefaultParamDict():
-	"""
-	Using order here to save files with _1_, _2_, _3_, ...
-	"""
-	paramDict = OrderedDict()
-	paramDict['analysisDate'] = ''
-	paramDict['analysisTime'] = ''
-	
-	paramDict['f3_param'] =[[3, 0.001], [5, 0.001], [7, 0.001]]
-	paramDict['medianKernelSize'] = (2,2,2)
-	paramDict['removeSmallerThan'] = 2000 #600 #500
-	
-	return paramDict
-	
-def myRun(path, paramDict, myIdx=0, saveFolder='analysisAics'):
+def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder='aicsAnalysis'):
 
 	"""
 		scale_x is set based on the estimated thickness of your target filaments.
@@ -84,49 +49,80 @@ def myRun(path, paramDict, myIdx=0, saveFolder='analysisAics'):
 	
 	gStartTime = time.time()
 
+	debug = False
+	verbose = False
+	
+	filename, paramDict, stackDict = \
+		aicsUtil.setupAnalysis(path, trimPercent, firstSlice=firstSlice, lastSlice=firstSlice, saveFolder=saveFolder)
+	
+	'''
+	if stackDict is None or stackDict['raw']['data'] is None:
+		# either uInclude is False or we did not find file
+		print('=== *** === vascDen.vascDenRun() aborting path:', path)  
+		return False
+	'''
+	
+	#
+	# parameters
 	f3_param = paramDict['f3_param']
 	medianKernelSize = paramDict['medianKernelSize']
+	removeBelowThisPercent = paramDict['removeBelowThisPercent']
 	removeSmallerThan = paramDict['removeSmallerThan']
-	
+
+	#
 	# save path
+	savePath = paramDict['saveBase']
+	tmpFileNoExtension = paramDict['fileNameBase']
+	'''
 	tmpPath, tmpFile = os.path.split(path)
 	tmpFileNoExtension, tmpExtension = tmpFile.split('.')
 	savePath = os.path.join(tmpPath, saveFolder)
 	if not os.path.isdir(savePath):
 		os.mkdir(savePath)
 	savePath = os.path.join(savePath, tmpFileNoExtension) # append to this with with _xxx.tif 
+	'''
 	
-	#print('savePath:', savePath)
-	
-	#f3_param=[[1, 0.01]]
-	#f3_param=[[5, 0.001], [3, 0.001]]
-	#f3_param=[[3, 0.001], [5, 0.001], [7, 0.001]] # 8 is no good
-	
+	tiffHeader = paramDict['tiffHeader']
+
+	#
+	# load
+	stackData = stackDict['raw']['data']
+	'''
 	logging.info('loading path: ' + path)
 	#print('loading path:', path)
 	#stackData = tifffile.imread(path)
-	stackData, tifHeader = bimpy.util.imread(path)
+	stackData, tiffHeader = bimpy.util.imread(path)
 	print('  .loaded', stackData.shape, myIdx)
-	
+	'''	
 	numSlices = stackData.shape[0]
+
+	#
+	# save raw to conserve memory
+	rawSavePath = savePath + '.tif'
+	print('  saving rawSavePath:', rawSavePath)
+	#bimpy.util.imsave(rawSavePath, stackData, tifHeader=tiffHeader, overwriteExisting=True)
+	bimpy.util.imsave(rawSavePath, stackData, tifHeader=tiffHeader, overwriteExisting=True)
+
 	#_printStackParams('loaded stackData', stackData)
 	
+	#
+	# sliding z
 	# never sure if i should slidingz then median or median then slidingz ???
-	stackData = bimpy.util.morphology.slidingZ(stackData, upDownSlices=1)
+	#stackData = bimpy.util.morphology.slidingZ(stackData, upDownSlices=1)
 
 	startTime = time.time()
 	#medianKernelSize = (3,4,4)
 	#medianKernelSize = (2,2,2)
-	print('  .median filter', myIdx)
+	if verbose: print('  .median filter', path)
 	stackData = bimpy.util.morphology.medianFilter(stackData, kernelSize=medianKernelSize)
 	stopTime = time.time()
-	print('    .median filter' , stackData.dtype, 'done in ', round(stopTime-startTime,2), myIdx)
+	if verbose: print('    .median filter' , stackData.dtype, 'done in ', round(stopTime-startTime,2), path)
 		
 	# give us a guess for our intensity_scaling_param parameters
 	#low_ratio, high_ratio = my_suggest_normalization_param(stackData)
 
 	# try per slice
-	print('  .per slice my_suggest_normalization_param', myIdx)
+	print('  .per slice my_suggest_normalization_param', path)
 	normData = stackData.astype(np.float16)
 	#normData = stackData.copy()
 	normData[:] = 0
@@ -136,41 +132,51 @@ def myRun(path, paramDict, myIdx=0, saveFolder='analysisAics'):
 		#print(i, low_ratio, high_ratio)
 		#low_ratio = 0.2
 		
-		'''
-		low_ratio -= 0.3
-		high_ratio -= 1
+		#low_ratio -= 0.3
+		#high_ratio -= 1
 		
-		if low_ratio < 0:
-			low_ratio = 0
-		'''
+		#if low_ratio < 0:
+		#	low_ratio = 0
 		
-		theMin = np.min(oneSlice)
-		theMax = np.max(oneSlice)
+		#theMin = np.min(oneSlice)
+		#theMax = np.max(oneSlice)
 		#print('    slice', i, 'min:', theMin, 'max:', theMax, 'snr:', theMax-theMin, 'low_ratio:', low_ratio, 'high_ratio:', high_ratio)
 
 		intensity_scaling_param = [low_ratio, high_ratio]
 		#sliceNormData = intensity_normalization(oneSlice, scaling_param=intensity_scaling_param)
 		sliceNormData = my_intensity_normalization(oneSlice, scaling_param=intensity_scaling_param)
 		normData[i,:,:] = sliceNormData
-	print('    .per slice my_suggest_normalization_param done', normData.dtype, myIdx)
+	if verbose: print('    .per slice my_suggest_normalization_param done', normData.dtype, path)
 			
+	#
+	# just try to remove noise
+	#removeBelowThisPercent = 0.11 # aicsCell uses 0.1, aicsVas uses 0.06
+	paramDict['removeBelowThisPercent'] = removeBelowThisPercent
+	normData = bimpy.util.morphology.threshold_remove_lower_percent(normData, removeBelowThisPercent=removeBelowThisPercent)
+	
 	# smoothing with edge preserving smoothing 
-	print('  .edge_preserving_smoothing_3d() normData:', normData.shape, normData.dtype, myIdx)
+	print('  .edge_preserving_smoothing_3d() ... please wait ... normData:', normData.shape, normData.dtype, path)
 	try:
-		smoothData = edge_preserving_smoothing_3d(normData)
+		if not debug:
+			normData = edge_preserving_smoothing_3d(normData)
+		else:
+			#normData = normData
+			pass
 	except (AttributeError) as e:
 		print('!!! my exception:', e)
 		print('    path:', path)
 		raise
 	
-	#_printStackParams('smoothData', smoothData)
-
-	print('  .filament_3d_wrapper() f3_param:', f3_param)
+	print('  .filament_3d_wrapper() ... please wait ... f3_param:', f3_param)
 	startTime = time.time()
-	filamentData = filament_3d_wrapper(smoothData, f3_param)
-	filamentData = filamentData.astype(np.uint8)
+	if not debug:
+		normData = filament_3d_wrapper(normData, f3_param)
+	else:
+		#normData = normData
+		pass
+	normData = normData.astype(np.uint8)
 	stopTime = time.time()
-	print('    .filament_3d_wrapper() took', round(stopTime-startTime,2), 'seconds', filamentData.dtype, myIdx)
+	print('    .filament_3d_wrapper() took', round(stopTime-startTime,2), 'seconds', normData.dtype, path)
 	#filamentData = filamentData > 0
 	#_printStackParams('filamentData', filamentData)
 
@@ -185,13 +191,14 @@ def myRun(path, paramDict, myIdx=0, saveFolder='analysisAics'):
 	# label
 	#removeSmallerThan = 500 #80
 
-	print('  .labelling mask and removing small labels <', removeSmallerThan)
+	if verbose: print('  .labelling mask and removing small labels <', removeSmallerThan)
 
-	labeledStack = bimpy.util.morphology.labelMask(filamentData) # uint32
+	# after this we are done with norm data, maybe delete it?
+	labeledStack = bimpy.util.morphology.labelMask(normData) # uint32
 	
-	'''
-	labeledStack, removedLabelStack, labelSizeList = bimpy.util.morphology.removeSmallLabels(labeledStack, removeSmallerThan=removeSmallerThan)	
-	'''
+	#
+	# delete normData from memory
+	normData = None
 	
 	labeledDataWithout, labeledDataRemoved, labelIdx, labelCount = \
 			bimpy.util.morphology.removeSmallLabels2(labeledStack, removeSmallerThan, timeIt=True, verbose=False)
@@ -220,43 +227,57 @@ def myRun(path, paramDict, myIdx=0, saveFolder='analysisAics'):
 	
 	#
 	# save size of each label (plot with tests/testPlotLabels.py)
+	'''
 	labelSizeArray = np.array(labelCount)
 	labelSizePath = os.path.join('/Users/cudmore/Desktop', tmpFileNoExtension + '_labelSizeList')
 	np.save(labelSizePath, labelSizeArray)
+	'''
+	
+	#
+	# update cell_db.csv
+	#aicsUtil.updateMasterCellDB(masterFilePath, filename, paramDict)
 	
 	#
 	# save
+	
+	'''
 	rawSavePath = savePath + '.tif'
 	print('  saving rawSavePath:', rawSavePath)
-	bimpy.util.imsave(rawSavePath, stackData, tifHeader=tifHeader, overwriteExisting=True)
+	#bimpy.util.imsave(rawSavePath, stackData, tifHeader=tiffHeader, overwriteExisting=True)
+	saveStackData = stackDict['raw']['data']
+	bimpy.util.imsave(rawSavePath, saveStackData, tifHeader=tiffHeader, overwriteExisting=True)
+	'''
 	
 	labeledSavePath = savePath + '_labeled.tif'
 	print('  saving labeledSavePath:', labeledSavePath)
-	bimpy.util.imsave(labeledSavePath, labeledDataWithout, tifHeader=tifHeader, overwriteExisting=True)
+	bimpy.util.imsave(labeledSavePath, labeledDataWithout, tifHeader=tiffHeader, overwriteExisting=True)
 	
 	removedLabelsSavePath = savePath + '_labeled_removed.tif'
-	print('  saving labeledSavePath:', labeledSavePath)
-	bimpy.util.imsave(removedLabelsSavePath, labeledDataRemoved, tifHeader=tifHeader, overwriteExisting=True)
+	print('  saving removedLabelsSavePath:', removedLabelsSavePath)
+	bimpy.util.imsave(removedLabelsSavePath, labeledDataRemoved, tifHeader=tiffHeader, overwriteExisting=True)
 	
 	maskSavePath = savePath + '_mask.tif'
 	print('  saving maskSavePath:', maskSavePath)
-	bimpy.util.imsave(maskSavePath, maskStack, tifHeader=tifHeader, overwriteExisting=True)
+	bimpy.util.imsave(maskSavePath, maskStack, tifHeader=tiffHeader, overwriteExisting=True)
 	
 		
+	# free memory
+	stackData = None
+	labeledDataWithout = None
+	labeledDataRemoved = None
+	maskStack= None
+	
+	# done
 	gStopTime = time.time()
 	tookSeconds = round(gStopTime-gStartTime,2)
 	
-	print('  .took', tookSeconds, 'seconds', tookSeconds/60, 'minutes', 'path:', path)
-	return tookSeconds, path
-
-def myLoad(path):
-	#print('myLoad() path:', path)
-	stackData = tifffile.imread(path)
-	#print('    loaded', stackData.shape, path)
-	return stackData
+	print('  .took', tookSeconds, 'seconds', round(tookSeconds/60,2), 'minutes', 'path:', path)
 	
+	return paramDict
 
 if __name__ == '__main__':
+
+	myTimer = bimpy.util.bTimer('aicsVas()')
 
 	# run one file
 	if 1:
@@ -264,27 +285,62 @@ if __name__ == '__main__':
 		
 		path = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_0014_ch2.tif'
 		
-		paramDict = myGetDefaultParamDict()
+		masterFilePath = 'aicsBatch/20200717_cell_db.csv'
+		#outFilePath = 'aicsBatch/20200717_cell_db_out.csv'
 		
-		myRun(path, paramDict=paramDict)
-	
+		saveFolder = 'aicsAnalysis'
+		
+		uInclude, uFirstSlice, uLastSlice = aicsUtil.parseMasterFile(masterFilePath, path)
+		if uInclude:
+			trimPercent = 15
+			paramDict = vascDenRun(path, trimPercent=trimPercent, firstSlice=uFirstSlice, lastSlice=uLastSlice, saveFolder=saveFolder)
+			#
+			# todo: rewrite updateMasterCellDB
+			#aicsUtil.updateMasterCellDB(outFilePath, path, paramDict)
+			
 	# run batch
 	if 0:
-		path = '/Users/cudmore/box/data/nathan/20200518/20200518__A01_G001_*_ch2.tif'
+
+		masterFilePath = 'aicsBatch/20200717_cell_db.csv'
+		path = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_*_ch2.tif'
+
 		filenames = glob.glob(path)
 		print('proccessing', len(filenames), 'files')
  		
-		startTime = time.time()
+		trimPercent = 15
+		saveFolder = 'aicsAnalysis'
 		
 		cpuCount = mp.cpu_count()
-		cpuCount -= 2
+		print('cpuCount:', cpuCount)
+		cpuCount = 3 #aics code is taking up to > 7 GB per stack , can't run in parallel with only 32 GB !!!
 		pool = mp.Pool(processes=cpuCount)
-		results = [pool.apply_async(myRun, args=(file,myIdx+1)) for myIdx, file in enumerate(filenames)]
+		
+		#results = [pool.apply_async(vascDenRun, args=(file,myIdx+1)) for myIdx, file in enumerate(filenames)]
+		
+		#
+		# build async pool
+		numFilesToAnalyze = 0
+		results = []
+		for filePath in filenames:
+			# file is full file path
+			
+			uInclude, uFirstSlice, uLastSlice = aicsUtil.parseMasterFile(masterFilePath, filePath)
+			
+			if uInclude:
+				# path, trimPercent=trimPercent, firstSlice=uFirstSlice, lastSlice=uLastSlice, saveFolder=saveFolder
+				args = [filePath, trimPercent, uFirstSlice, uLastSlice, saveFolder]
+				oneResult = pool.apply_async(vascDenRun, args=args)
+				results.append(oneResult)
+				
+				numFilesToAnalyze += 1
+				
+		#
+		# run
 		for idx, result in enumerate(results):
-			#print(result.get())
-			result.get()
-        			
-		stopTime = time.time()
-		print('finished in', round(stopTime-startTime,2), 'seconds')
+			print('=== running file', idx+1, 'of', numFilesToAnalyze)
+			oneParamDict = result.get()
+			print('\nDONE with idx:', idx, 'paramDict:', oneParamDict)
+	#
+	print(myTimer.elapsed())
 
 

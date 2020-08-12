@@ -48,14 +48,14 @@ def myMakeGrid(path, prefixStr, channel, nRow, nCol):
                 
         else:
             # todo: This is a bug if we missing files
-            print('  WARNING: Did not find file:', tiffPath)
+            #print('  WARNING: Did not find file:', tiffPath)
             tifDataList.append(None)
             tifMaxList.append(None)
     
     #
     return tifDataList, tifMaxList, filenames, integerGrid
 
-def plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList, plotLabels, wSpace, hSpace):
+def plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList, plotLabels, wSpace, hSpace, verbose=False):
 	print('please wait ... folderPath:', folderPath)
 
 	#plotLabels = True # plot the file index in the middle of the image
