@@ -5,6 +5,7 @@ from aicsGridNapari import aicsGridNapari
 # raw
 masterFilePath = '' #'aicsBatch/20200720_cell_db.csv'
 path = '/Users/cudmore/data/20200724'
+path = '/home/cudmore/data/20200724'
 prefixStr = '20200724__A01_G001_'
 commonShape = (73,740,740) # if trimPercent then AFTER trimming
 commonVoxelSize = (1, 0.3977476, 0.3977476)
