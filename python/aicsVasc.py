@@ -258,6 +258,8 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 	
 	maskSavePath = savePath + '_mask.tif'
 	print('  saving maskSavePath:', maskSavePath)
+	# ValueError: ImageJ does not support data type ?
+	# maskStack = maskStack.astype(np.bool_)
 	bimpy.util.imsave(maskSavePath, maskStack, tifHeader=tiffHeader, overwriteExisting=True)
 	
 		

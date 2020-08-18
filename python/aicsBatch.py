@@ -32,7 +32,7 @@ import bimpy
 
 import aicsUtil
 
-def aicsBatch(path, masterFilePath, type, channel, cpuCount=None):
+def aicsBatch(path, masterFilePath, type, channel, doAllStacks=False, doAllSlices=True, cpuCount=None):
 	"""
 	path: wildcard path like, /Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_*_ch1.tif
 	"""
@@ -57,7 +57,6 @@ def aicsBatch(path, masterFilePath, type, channel, cpuCount=None):
 	
 	trimPercent = 15
 	saveFolder = 'aicsAnalysis'
-	
 		
 	'''
 	if type == 'vasc':
@@ -78,9 +77,13 @@ def aicsBatch(path, masterFilePath, type, channel, cpuCount=None):
 	for filePath in filenames:
 		# file is full file path
 		
-		uInclude, uFirstSlice, uLastSlice = aicsUtil.parseMasterFile(masterFilePath, filePath)
+		uFile, uInclude, uFirstSlice, uLastSlice = aicsUtil.parseMasterFile(masterFilePath, filePath)
 		
-		if uInclude:
+		if doAllSlices:
+			uFirstSlice = None
+			uLastSlice = None
+			
+		if doAllStacks or uInclude:
 			# path, trimPercent=trimPercent, firstSlice=uFirstSlice, lastSlice=uLastSlice, saveFolder=saveFolder
 			
 			if type == 'vasc':
@@ -95,6 +98,8 @@ def aicsBatch(path, masterFilePath, type, channel, cpuCount=None):
 
 			numFilesToAnalyze += 1
 			
+	print('numFilesToAnalyze:', numFilesToAnalyze)
+	
 	#
 	# run
 	paramList = []
@@ -137,24 +142,36 @@ if __name__ == '__main__':
 	cpuCount = mp.cpu_count()
 
 	dataDir = '/Volumes/ThreeRed/nathan'
+	dataDir = '/Users/cudmore/data'
 	
 	date = '20200717'
+	date = '20200720'
+	date = '20200722'
+	date = '20200724'
+	
 	# 1
-	'''
-	type = 'cell'
-	channel = 1
-	cpuCount -= 2
-	'''
+	if 1:
+		type = 'cell'
+		channel = 1
+		cell_cpuCount = cpuCount - 2
+
+		# leave this
+		masterFilePath = 'aicsBatch/' + date + '_cell_db.csv'
+		path = '/Volumes/ThreeRed/nathan' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
+		path = '/Users/cudmore/data' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
+			
+		aicsBatch(path, masterFilePath, type, channel, doAllStacks=True, cpuCount=cell_cpuCount)
+
 	# 2
-	type = 'vasc'
-	channel = 2
-	#cpuCount = cpuCount - 5
-	cpuCount = cpuCount - 5
+	if 1:
+		type = 'vasc'
+		channel = 2
+		vasc_cpuCount = cpuCount - 5
 	
-	# leave this
-	masterFilePath = 'aicsBatch/' + date + '_cell_db.csv'
-	path = '/Volumes/ThreeRed/nathan' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
-	
-	
-	aicsBatch(path, masterFilePath, type, channel, cpuCount=cpuCount)
+		# leave this
+		masterFilePath = 'aicsBatch/' + date + '_cell_db.csv'
+		path = '/Volumes/ThreeRed/nathan' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
+		path = '/Users/cudmore/data' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
+		
+		aicsBatch(path, masterFilePath, type, channel, doAllStacks=True, cpuCount=vasc_cpuCount)
 	

@@ -62,10 +62,13 @@ def plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList, plot
 
 	# choose a width (in inches) and we will calculate a respective height
 	figWidth = 10 #nCol
+	figWidth = nCol
 	#figHeight = nRow
 	heightMult = nRow / nCol
 	figHeight = figWidth * heightMult
 
+	print('figWidth:', 'figHeight:', figHeight)
+	
 	# make (nRow x nCol) subplots
 	fig, axs = plt.subplots(nrows=nRow, ncols=nCol,
 							sharex=True, sharey=True, figsize=(figWidth,figHeight), constrained_layout=False)
@@ -112,7 +115,7 @@ def plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList, plot
 if __name__ == '__main__':
 
 	# either this
-	if 1:
+	if 0:
 		folderPath = '/Users/cudmore/box/data/nathan/20200518'
 		prefixStr = '20200518__A01_G001_'
 		nRow = 8
@@ -124,6 +127,12 @@ if __name__ == '__main__':
 		prefixStr = '20200519__A01_G001_'
 		nRow = 17
 		nCol = 7
+
+	if 1:
+		folderPath = '/Users/cudmore/data/20200720'
+		prefixStr = '20200720__A01_G001_'
+		nRow = 12
+		nCol = 4
 
 	# specify the channel
 	channel = 1
@@ -141,7 +150,7 @@ if __name__ == '__main__':
 	
 	#
 	# plot
-	plotLabels = True
+	plotLabels = False
 	wSpace = 0.02 # a little white space between stacks
 	hSpace = 0.02
 	#wSpace = -0.1 # to remove border

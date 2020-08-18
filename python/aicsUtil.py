@@ -42,7 +42,7 @@ def myGetDefaultParamDict():
 	
 	return paramDict
 	
-################################################################################
+'''
 def myGetDefaultStackDict():
 	"""
 	Using order here to save files with _1_, _2_, _3_, ...
@@ -62,7 +62,34 @@ def myGetDefaultStackDict():
 	stackDict['finalMask_edt'] = {'type': 'edt', 'data': None}
 
 	return stackDict
+'''
+################################################################################
+def myGetDefaultStackDict():
+	"""
+	Using order here to save files with _1_, _2_, _3_, ...
+	"""
+	stackDict = OrderedDict()
+	stackDict['raw'] = {'type': 'image', 'data': None}
+	stackDict['slidingz'] = {'type': 'image', 'data': None}
+	stackDict['filtered'] = {'type': 'image', 'data': None}
+	stackDict['threshold0'] = {'type': 'image', 'data': None} # added while working on 20200518, remove lower % of image
+	stackDict['threshold1'] = {'type': 'image', 'data': None} # image remaining after threshold_sauvola
+	stackDict['threshold'] = {'type': 'mask', 'data': None} # added while working on cellDen.py
+	stackDict['labeled'] = {'type': 'label', 'data': None}
+	stackDict['small_labels'] = {'type': 'label', 'data': None}
+	stackDict['mask'] = {'type': 'mask', 'data': None}
+	stackDict['remainingRaw'] = {'type': 'image', 'data': None}
+	stackDict['finalMask_hull'] = {'type': 'mask', 'data': None}
+	stackDict['finalMask_edt'] = {'type': 'edt', 'data': None}
 
+	return stackDict
+
+################################################################################
+def removeChannelFromName(name):
+	name = name.replace('_ch1', '')
+	name = name.replace('_ch2', '')
+	return name	
+	
 ################################################################################
 def updateMasterCellDB(outFilePath, path, paramDict):
 	"""
@@ -129,22 +156,87 @@ def updateMasterCellDB(outFilePath, path, paramDict):
 	df.to_csv(masterFilePath, index_label='index')
 	
 ################################################################################
-def parseMasterFile(masterFilePath, filePath):
-	"""
-	filePath: full file name with _ch and .tif
-	"""
+def getAnalysisPath(masterFilePath):
+
 	if not os.path.isfile(masterFilePath):
-		print('  ERROR: parseMasterFile() did not find masterFilePath:', masterFilePath)
-		return None, None, None
+		print('  ERROR: getNextFile() did not find masterFilePath:', masterFilePath)
+		return None, None
+
+	df = pd.read_csv(masterFilePath, index_col=False) # index_col=False can be used to force pandas to not use the first column as the index
+	numRow = df.shape[0]
 	
+	uAnalysisPath = df['uAnalysisPath'].iloc[0]
+	
+	return uAnalysisPath
+	
+################################################################################
+def getNextFile(masterFilePath, rowIdx=None, getThis='next'):
+	"""
+	Search masterFilePath for next file with 'uInclude'
+	
+	rowIdx: row index to start at, otherwise 0
+	getThis: in (next, previous)
+	"""
+	
+	if not os.path.isfile(masterFilePath):
+		print('  ERROR: getNextFile() did not find masterFilePath:', masterFilePath)
+		return None, None
+
+	df = pd.read_csv(masterFilePath, index_col=False) # index_col=False can be used to force pandas to not use the first column as the index
+	numRow = df.shape[0]
+
+	if rowIdx is None:
+		rowIdx = -1
+	
+	if getThis == 'next':
+		# increment
+		rowIdx += 1
+		endRow = numRow
+		theRange = range(rowIdx, endRow)
+	elif getThis == 'previous':
+		#rowIdx -= 1
+		endRow = 0
+		theRange = reversed(range(endRow, rowIdx))
+	
+	#print('rowIdx:', rowIdx, 'endRow:', endRow)
+	
+	theRowIndex = None
+	theFile = None
+	
+	# search from rowIdx+1 to end and look for 'uInclude'
+	for i in theRange:
+		uFilename = df['uFilename'].iloc[i]
+		uInclude = df['uInclude'].iloc[i]
+		#print(i, uFilename, uInclude)
+		if uInclude == 1:
+			#print(i, uFilename, uInclude)
+			theRowIndex = i
+			theFile = uFilename
+			break
+			
+	return theRowIndex, theFile
+	
+################################################################################
+def parseMasterFile(masterFilePath, filePath, dfMasterFile=None):
+	"""
+	filePath: full RAW file name with _ch and .tif
+	"""
+	if dfMasterFile is not None:
+		df = dfMasterFile
+	else:
+		if not os.path.isfile(masterFilePath):
+			print('  ERROR: parseMasterFile() did not find masterFilePath:', masterFilePath)
+			return None, None, None, None
+		df = pd.read_csv(masterFilePath)
+		
 	tmpPath, tmpFilename = os.path.split(filePath)
 	filename, ext = tmpFilename.split('.')
 	
 	#print('    parseMasterFile() loading .csv to get (uInclude, uFirstslice, uLastslice) for uFilename:', filename, 'from masterFilePath:', masterFilePath)
 	
-	df = pd.read_csv(masterFilePath)
+	#df = pd.read_csv(masterFilePath)
 
-	uInclude = True
+	uInclude = None # changed from True on 20200813
 	firstSlice = None
 	lastSlice = None
 
@@ -155,7 +247,7 @@ def parseMasterFile(masterFilePath, filePath):
 	if df is not None:
 		df2 = df.loc[df['uFilename'] == baseFilename, 'uFirstSlice']
 		if df2.shape[0] == 0:
-			print('  ERROR: parseMasterFile() did not find dfMasterCellDB uFilename:', baseFilename)
+			print('  ERROR: parseMasterFile() did not find dfMasterCellDB uFilename:', baseFilename, 'in master file')
 		else:
 			thisLineDF = df[df['uFilename'] == baseFilename]
 
@@ -190,7 +282,7 @@ def parseMasterFile(masterFilePath, filePath):
 	else:
 		print('ERROR: pruneStackData() did not read df from masterFilePath:', masterFilePath)
 
-	return uInclude, firstSlice, lastSlice
+	return baseFilename, uInclude, firstSlice, lastSlice
 	
 ################################################################################
 def pruneStackData(filename, stackData, firstSlice=None, lastSlice=None):
@@ -212,6 +304,22 @@ def pruneStackData(filename, stackData, firstSlice=None, lastSlice=None):
 
 	return stackData
 	
+################################################################################
+def trimStack(stackData, trimPercent, verbose=False):
+	trimPixels = math.floor( trimPercent * stackData.shape[1] / 100 ) # ASSUMING STACKS ARE SQUARE
+	trimPixels = math.floor(trimPixels / 2)
+	if trimPixels > 0:
+		if verbose: print('    trimming', trimPixels, 'lower/right pixels')
+		if verbose: print('    original shape:', stackData.shape)
+		thisHeight = stackData.shape[1] - trimPixels
+		thisWidth = stackData.shape[2] - trimPixels
+		stackData = stackData[:, 0:thisHeight, 0:thisWidth]
+		if verbose: print('    final shape:', stackData.shape)
+	else:
+		print('    WARNING: trimStack() not trimming lower/right x/y !!!')
+	
+	return stackData
+
 ################################################################################
 def setupAnalysis(path, trimPercent = 15, firstSlice=None, lastSlice=None, saveFolder='aicsAnalysis'):
 	"""
@@ -321,7 +429,7 @@ if __name__ == '__main__':
 	trimPercent = 15
 	masterFilePath = 'aicsBatch/20200717_cell_db.csv'
 	
-	uInclude, uFirstSlice, uLastSlice = parseMasterFile(masterFilePath, path)
+	uFIle, uInclude, uFirstSlice, uLastSlice = parseMasterFile(masterFilePath, path)
 	
 	filename, paramDict, stackDict = \
 		setupAnalysis(path, trimPercent = 15, firstSlice=uFirstSlice, lastSlice=uLastSlice)
