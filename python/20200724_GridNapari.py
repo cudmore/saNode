@@ -15,6 +15,19 @@ finalPostfixList = [''] # '' is no postfix, e.g. raw tiff like _ch1.tif and _ch2
 trimPercent = 15 # aicsAnalysis is already trimmed
 doUseInclude = False
 
+# analysis
+# masterFilePath = '' #'aicsBatch/20200720_cell_db.csv'
+path = '/Users/cudmore/data/20200724'
+path = '/home/cudmore/data/20200724/aicsAnalysis'
+prefixStr = '20200724__A01_G001_'
+commonShape = (73,740,740) # if trimPercent then AFTER trimming
+commonVoxelSize = (1, 0.3977476, 0.3977476)
+channelList = [1,2]
+gridShape = (7,5) # (11, 5)
+finalPostfixList = ['', '_mask', '_labeled'] # '' is no postfix, e.g. raw tiff like _ch1.tif and _ch2.tif
+trimPercent = None # aicsAnalysis is already trimmed
+doUseInclude = False
+
 aicsGridParam = OrderedDict()
 aicsGridParam['masterFilePath'] = masterFilePath
 aicsGridParam['path'] = path
