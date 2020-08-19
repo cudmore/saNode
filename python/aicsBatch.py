@@ -145,12 +145,12 @@ if __name__ == '__main__':
 	dataDir = '/Users/cudmore/data'
 	
 	date = '20200717'
-	date = '20200720'
-	date = '20200722'
-	date = '20200724'
+	#date = '20200720'
+	#date = '20200722'
+	#date = '20200724'
 	
 	# 1
-	if 1:
+	if 0:
 		type = 'cell'
 		channel = 1
 		cell_cpuCount = cpuCount - 2
