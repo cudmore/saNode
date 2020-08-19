@@ -159,6 +159,7 @@ if __name__ == '__main__':
 		masterFilePath = 'aicsBatch/' + date + '_cell_db.csv'
 		path = '/Volumes/ThreeRed/nathan' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
 		path = '/Users/cudmore/data' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
+		path = '/home/cudmore/data' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
 			
 		aicsBatch(path, masterFilePath, type, channel, doAllStacks=True, cpuCount=cell_cpuCount)
 
@@ -166,12 +167,13 @@ if __name__ == '__main__':
 	if 1:
 		type = 'vasc'
 		channel = 2
-		vasc_cpuCount = cpuCount - 5
+		vasc_cpuCount = cpuCount - 8 # -5 on home macOS
 	
 		# leave this
 		masterFilePath = 'aicsBatch/' + date + '_cell_db.csv'
 		path = '/Volumes/ThreeRed/nathan' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
 		path = '/Users/cudmore/data' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
+		path = '/home/cudmore/data' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
 		
 		aicsBatch(path, masterFilePath, type, channel, doAllStacks=True, cpuCount=vasc_cpuCount)
 	

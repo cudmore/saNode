@@ -5,12 +5,14 @@ from aicsGridNapari import aicsGridNapari
 masterFilePath = 'aicsBatch/20200717_cell_db.csv'
 path = '/Volumes/ThreeRed/nathan/20200717/aicsAnalysis0'
 path = '/Users/cudmore/Desktop/aicsAnalysis0'
+path = '/home/cudmore/data/20200717/aicsAnalysis'
 prefixStr = '20200717__A01_G001_'
 commonShape = (88,740,740)
 commonVoxelSize = (1, 0.3977476, 0.3977476)
 channelList = [1,2]
 gridShape = (11,4)
 finalPostfixList = ['', '_mask', '_labeled']
+trimPercent = None
 #doUseInclude = True
 #doUseFirstLast = True
 
@@ -34,6 +36,7 @@ aicsGridParam['commonVoxelSize'] = commonVoxelSize
 aicsGridParam['channelList'] = channelList
 aicsGridParam['gridShape'] = gridShape
 aicsGridParam['finalPostfixList'] = finalPostfixList
+aicsGridParam['trimPercent'] = trimPercent
 #aicsGridParam['doUseInclude'] = doUseInclude
 #aicsGridParam['doUseFirstLast'] = doUseFirstLast
 
