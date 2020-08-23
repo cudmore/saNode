@@ -1,4 +1,26 @@
+## todo
+
+todo:
+
+1) on keyboard 'r', full refresh/populate all tables (nodes, edge, search)
+
+2) fix join code (mostly interface)
+
+3) add cTime to (node, edge, slab) and use it to find an object WITHOUT index
+
 # Install
+
+```
+pip install -e .
+```
+
+Then include in a script with
+
+```
+from sanode import aicsUtil2
+myParams = aicsUtil2.myGetDefaultGridParams()
+print(myParams)
+```
 
 ## Install aics and bImPy togethere
 
