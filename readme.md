@@ -29,8 +29,8 @@ print(myParams)
 Need to use conda
 
 ```
-conda create -n segmentation2 python=3.6
-conda activate segmentation
+conda create -n sanode-env python=3.6
+conda activate sanode-env
 
 conda install nb_conda
 
@@ -39,7 +39,12 @@ git clone https://github.com/AllenInstitute/aics-segmentation.git
 
 pip install numpy
 pip install itkwidgets==0.14.0
-pip install -e segmentation.git/.[all]
+
+# this fails
+#pip install -e aics-segmentation/.[all]
+# with this error
+# ERROR: Could not find a version that satisfies the requirement aicspylibczi>=2.5.0 (from aicsimageio>=3.0.0->aicssegmentation==0.1.21.dev0) (from versions: none)
+#ERROR: No matching distribution found for aicspylibczi>=2.5.0 (from aicsimageio>=3.0.0->aicssegmentation==0.1.21.dev0)
 
 # install bimpy
 pip install -e /Users/Sites/bImPy/.

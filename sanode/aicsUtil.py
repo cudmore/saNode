@@ -345,6 +345,11 @@ def _printStackParams(name, myStack):
 		)
 ################################################################################
 def zExpandStack(path):
+	"""
+	move to bimpy.util
+	"""
+	print('\n\nMOVED TO bimpy.util\n\n')
+	
 	stackData, stackHeader = bimpy.util.bTiffFile.imread(path)
 	print('zExpandStack() path:', path)
 	print('  ', stackData.shape)
