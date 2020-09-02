@@ -27,6 +27,7 @@ import multiprocessing as mp
 import bimpy
 
 import aicsUtil
+import aicsUtil2
 
 from aicssegmentation.core.vessel import filament_3d_wrapper
 from aicssegmentation.core.pre_processing_utils import edge_preserving_smoothing_3d
@@ -41,27 +42,27 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 		For example, if visually the thickness of the filaments is usually 3~4 pixels,
 		then you may want to set scale_x as 1 or something near 1 (like 1.25).
 		Multiple scales can be used, if you have filaments of very different thickness.
-	
+
 		cutoff_x is a threshold applied on the actual filter reponse to get the binary result.
 		Smaller cutoff_x may yielf more filaments, especially detecting more dim ones and thicker segmentation,
 		while larger cutoff_x could be less permisive and yield less filaments and slimmer segmentation.
 	"""
-	
+
 	gStartTime = time.time()
 
 	debug = False
 	verbose = False
-	
+
 	filename, paramDict, stackDict = \
-		aicsUtil.setupAnalysis(path, trimPercent, firstSlice=firstSlice, lastSlice=firstSlice, saveFolder=saveFolder)
-	
+		aicsUtil.setupAnalysis(path, trimPercent, firstSlice=firstSlice, lastSlice=lastSlice, saveFolder=saveFolder)
+
 	'''
 	if stackDict is None or stackDict['raw']['data'] is None:
 		# either uInclude is False or we did not find file
-		print('=== *** === vascDen.vascDenRun() aborting path:', path)  
+		print('=== *** === vascDen.vascDenRun() aborting path:', path)
 		return False
 	'''
-	
+
 	#
 	# parameters
 	f3_param = paramDict['f3_param']
@@ -79,9 +80,9 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 	savePath = os.path.join(tmpPath, saveFolder)
 	if not os.path.isdir(savePath):
 		os.mkdir(savePath)
-	savePath = os.path.join(savePath, tmpFileNoExtension) # append to this with with _xxx.tif 
+	savePath = os.path.join(savePath, tmpFileNoExtension) # append to this with with _xxx.tif
 	'''
-	
+
 	tiffHeader = paramDict['tiffHeader']
 
 	#
@@ -93,7 +94,11 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 	#stackData = tifffile.imread(path)
 	stackData, tiffHeader = bimpy.util.imread(path)
 	print('  .loaded', stackData.shape, myIdx)
-	'''	
+	'''
+
+	# abb 2020091 laptop
+	# expand stack in z s.t. each slice has 4x copies of *self above and below
+
 	numSlices = stackData.shape[0]
 
 	#
@@ -104,7 +109,7 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 	bimpy.util.imsave(rawSavePath, stackData, tifHeader=tiffHeader, overwriteExisting=True)
 
 	#_printStackParams('loaded stackData', stackData)
-	
+
 	#
 	# sliding z
 	# never sure if i should slidingz then median or median then slidingz ???
@@ -117,7 +122,7 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 	stackData = bimpy.util.morphology.medianFilter(stackData, kernelSize=medianKernelSize)
 	stopTime = time.time()
 	if verbose: print('    .median filter' , stackData.dtype, 'done in ', round(stopTime-startTime,2), path)
-		
+
 	# give us a guess for our intensity_scaling_param parameters
 	#low_ratio, high_ratio = my_suggest_normalization_param(stackData)
 
@@ -131,13 +136,13 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 		low_ratio, high_ratio = my_suggest_normalization_param(oneSlice)
 		#print(i, low_ratio, high_ratio)
 		#low_ratio = 0.2
-		
+
 		#low_ratio -= 0.3
 		#high_ratio -= 1
-		
+
 		#if low_ratio < 0:
 		#	low_ratio = 0
-		
+
 		#theMin = np.min(oneSlice)
 		#theMax = np.max(oneSlice)
 		#print('    slice', i, 'min:', theMin, 'max:', theMax, 'snr:', theMax-theMin, 'low_ratio:', low_ratio, 'high_ratio:', high_ratio)
@@ -147,14 +152,14 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 		sliceNormData = my_intensity_normalization(oneSlice, scaling_param=intensity_scaling_param)
 		normData[i,:,:] = sliceNormData
 	if verbose: print('    .per slice my_suggest_normalization_param done', normData.dtype, path)
-			
+
 	#
 	# just try to remove noise
 	#removeBelowThisPercent = 0.11 # aicsCell uses 0.1, aicsVas uses 0.06
 	paramDict['removeBelowThisPercent'] = removeBelowThisPercent
 	normData = bimpy.util.morphology.threshold_remove_lower_percent(normData, removeBelowThisPercent=removeBelowThisPercent)
-	
-	# smoothing with edge preserving smoothing 
+
+	# smoothing with edge preserving smoothing
 	print('  .edge_preserving_smoothing_3d() ... please wait ... normData:', normData.shape, normData.dtype, path)
 	try:
 		if not debug:
@@ -166,7 +171,7 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 		print('!!! my exception:', e)
 		print('    path:', path)
 		raise
-	
+
 	print('  .filament_3d_wrapper() ... please wait ... f3_param:', f3_param)
 	startTime = time.time()
 	if not debug:
@@ -186,7 +191,7 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 	filamentData = scipy.ndimage.morphology.binary_dilation(filamentData, structure=None, border_value=border_value, iterations=iterations)
 	filamentData = filamentData.astype(np.uint8)
 	'''
-	
+
 	#
 	# label
 	#removeSmallerThan = 500 #80
@@ -195,11 +200,11 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 
 	# after this we are done with norm data, maybe delete it?
 	labeledStack = bimpy.util.morphology.labelMask(normData) # uint32
-	
+
 	#
 	# delete normData from memory
 	normData = None
-	
+
 	labeledDataWithout, labeledDataRemoved, labelIdx, labelCount = \
 			bimpy.util.morphology.removeSmallLabels2(labeledStack, removeSmallerThan, timeIt=True, verbose=False)
 
@@ -212,19 +217,19 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 	#
 	uniqueRemoved, countsRemoved = np.unique(labeledDataRemoved, return_counts=True)
 	removedNumLabels = len(uniqueRemoved)
-	
+
 	print('    origNumLabels:', origNumLabels)
 	print('    remainingNumLabels:', remainingNumLabels)
 	print('    removedNumLabels:', removedNumLabels)
 
 	myPrettyPrint = np.asarray((uniqueRemoved, countsRemoved)).T
 	#print(myPrettyPrint)
-	
+
 	#
 	# final mask (directly from remaining labels)
 	maskStack = labeledDataWithout > 0
 	maskStack = maskStack.astype(np.uint8)
-	
+
 	#
 	# save size of each label (plot with tests/testPlotLabels.py)
 	'''
@@ -232,14 +237,14 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 	labelSizePath = os.path.join('/Users/cudmore/Desktop', tmpFileNoExtension + '_labelSizeList')
 	np.save(labelSizePath, labelSizeArray)
 	'''
-	
+
 	#
 	# update cell_db.csv
 	#aicsUtil.updateMasterCellDB(masterFilePath, filename, paramDict)
-	
+
 	#
 	# save
-	
+
 	'''
 	rawSavePath = savePath + '.tif'
 	print('  saving rawSavePath:', rawSavePath)
@@ -247,34 +252,34 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 	saveStackData = stackDict['raw']['data']
 	bimpy.util.imsave(rawSavePath, saveStackData, tifHeader=tiffHeader, overwriteExisting=True)
 	'''
-	
+
 	labeledSavePath = savePath + '_labeled.tif'
 	print('  saving labeledSavePath:', labeledSavePath)
 	bimpy.util.imsave(labeledSavePath, labeledDataWithout, tifHeader=tiffHeader, overwriteExisting=True)
-	
+
 	removedLabelsSavePath = savePath + '_labeled_removed.tif'
 	print('  saving removedLabelsSavePath:', removedLabelsSavePath)
 	bimpy.util.imsave(removedLabelsSavePath, labeledDataRemoved, tifHeader=tiffHeader, overwriteExisting=True)
-	
+
 	maskSavePath = savePath + '_mask.tif'
 	print('  saving maskSavePath:', maskSavePath)
 	# ValueError: ImageJ does not support data type ?
 	# maskStack = maskStack.astype(np.bool_)
 	bimpy.util.imsave(maskSavePath, maskStack, tifHeader=tiffHeader, overwriteExisting=True)
-	
-		
+
+
 	# free memory
 	stackData = None
 	labeledDataWithout = None
 	labeledDataRemoved = None
 	maskStack= None
-	
+
 	# done
 	gStopTime = time.time()
 	tookSeconds = round(gStopTime-gStartTime,2)
-	
+
 	print('  .took', tookSeconds, 'seconds', round(tookSeconds/60,2), 'minutes', 'path:', path)
-	
+
 	return paramDict
 
 if __name__ == '__main__':
@@ -284,22 +289,29 @@ if __name__ == '__main__':
 	# run one file
 	if 1:
 		path = '/Users/cudmore/box/data/nathan/20200518/20200518__A01_G001_0003_ch2.tif'
-		
 		path = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_0014_ch2.tif'
-		
+		path = '/Users/cudmore/Box/data/20200717/20200717__A01_G001_0014_ch2.tif'
+
+		# after expanding with each slice with iteself above and below
+		path = '/Users/cudmore/Box/data/20200717/20200717__A01_G001_0014a_ch2.tif'
+
 		masterFilePath = 'aicsBatch/20200717_cell_db.csv'
 		#outFilePath = 'aicsBatch/20200717_cell_db_out.csv'
-		
+
 		saveFolder = 'aicsAnalysis'
-		
-		uInclude, uFirstSlice, uLastSlice = aicsUtil.parseMasterFile(masterFilePath, path)
-		if uInclude:
+
+		uFirstSlice = None
+		uLastSlice = None
+		#baseFilename, uInclude, uFirstSlice, uLastSlice = aicsUtil2.parseMasterFile(masterFilePath, path)
+		#print('uFirstSlice:', uFirstSlice, 'uLastSlice:', uLastSlice)
+		#if uInclude:
+		if 1:
 			trimPercent = 15
 			paramDict = vascDenRun(path, trimPercent=trimPercent, firstSlice=uFirstSlice, lastSlice=uLastSlice, saveFolder=saveFolder)
 			#
 			# todo: rewrite updateMasterCellDB
 			#aicsUtil.updateMasterCellDB(outFilePath, path, paramDict)
-			
+
 	# run batch
 	if 0:
 
@@ -308,34 +320,34 @@ if __name__ == '__main__':
 
 		filenames = glob.glob(path)
 		print('proccessing', len(filenames), 'files')
- 		
+
 		trimPercent = 15
 		saveFolder = 'aicsAnalysis'
-		
+
 		cpuCount = mp.cpu_count()
 		print('cpuCount:', cpuCount)
 		cpuCount = 3 #aics code is taking up to > 7 GB per stack , can't run in parallel with only 32 GB !!!
 		pool = mp.Pool(processes=cpuCount)
-		
+
 		#results = [pool.apply_async(vascDenRun, args=(file,myIdx+1)) for myIdx, file in enumerate(filenames)]
-		
+
 		#
 		# build async pool
 		numFilesToAnalyze = 0
 		results = []
 		for filePath in filenames:
 			# file is full file path
-			
-			uInclude, uFirstSlice, uLastSlice = aicsUtil.parseMasterFile(masterFilePath, filePath)
-			
+
+			baseFilename, uInclude, uFirstSlice, uLastSlice = aicsUtil.parseMasterFile(masterFilePath, filePath)
+
 			if uInclude:
 				# path, trimPercent=trimPercent, firstSlice=uFirstSlice, lastSlice=uLastSlice, saveFolder=saveFolder
 				args = [filePath, trimPercent, uFirstSlice, uLastSlice, saveFolder]
 				oneResult = pool.apply_async(vascDenRun, args=args)
 				results.append(oneResult)
-				
+
 				numFilesToAnalyze += 1
-				
+
 		#
 		# run
 		for idx, result in enumerate(results):
@@ -344,5 +356,3 @@ if __name__ == '__main__':
 			print('\nDONE with idx:', idx, 'paramDict:', oneParamDict)
 	#
 	print(myTimer.elapsed())
-
-

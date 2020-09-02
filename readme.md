@@ -64,6 +64,28 @@ pip install -e .
 cd ..
 ```
 
+### Install on my laptop (seems to work with Python 3.7.x)
+
+```
+# inside saNode/ cloned directory
+
+python3 -m venv sanode_env
+source sanode_env/bin/activate
+
+pip install numpy
+pip install itkwidgets==0.14.0
+
+# download and install aics-segmentation
+git clone https://github.com/AllenInstitute/aics-segmentation.git
+pip install -e aics-segmentation/.[all]
+
+# install bImPy
+pip install -e ../bImPy/.
+
+# downgrade tifffile (for aics)
+pip install tifffile==0.15.1
+```
+
 ### Make a virtual environment to run myConvex hull
 
 This is called at the end of vascDen.py myRun(). Note, saved convex hull will not have a header with x/y/z voxel size. This is ok.
@@ -105,8 +127,8 @@ Run vascDen and/or cellDen on one raw file.
  - Make sure calling vascDen.py on vascular channel 2
 
 ```
-python cellDen.py /Users/cudmore/box/data/nathan/20200518/20200518__A01_G001_0016_ch1.tif 
-python vascDen.py /Users/cudmore/box/data/nathan/20200518/20200518__A01_G001_0016_ch2.tif 
+python cellDen.py /Users/cudmore/box/data/nathan/20200518/20200518__A01_G001_0016_ch1.tif
+python vascDen.py /Users/cudmore/box/data/nathan/20200518/20200518__A01_G001_0016_ch2.tif
 ```
 
 #### [OR] Entire folder
@@ -150,4 +172,3 @@ See https://osf.io/dashboard for file sharing
 ```
 test-osf.py
 ```
-

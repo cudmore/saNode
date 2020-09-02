@@ -4,7 +4,7 @@ Run one or the other (vasc, cell) across an entire directory
 See __main__ to set parameters like:
 
 	dataDir = '/Volumes/ThreeRed/nathan'
-	
+
 	date = '20200717'
 	# 1
 	'''
@@ -19,7 +19,7 @@ See __main__ to set parameters like:
 
 This make a lot of assumptions about file names, like
 	20200717__A01_G001_*_ch1.tif
-	
+
 """
 
 import os, sys, glob
@@ -41,8 +41,8 @@ def aicsBatch(path, masterFilePath, type, channel, doAllStacks=False, doAllSlice
 	print('  masterFilePath:', masterFilePath)
 	print('  type:', type)
 	print('  channel:', channel)
-		
-	
+
+
 	if cpuCount is None:
 		cpuCount = mp.cpu_count()
 		print('cpuCount:', cpuCount)
@@ -54,10 +54,10 @@ def aicsBatch(path, masterFilePath, type, channel, doAllStacks=False, doAllSlice
 
 	filenames = glob.glob(path)
 	print('  proccessing', len(filenames), 'files')
-	
+
 	trimPercent = 15
 	saveFolder = 'aicsAnalysis'
-		
+
 	'''
 	if type == 'vasc':
 		# vasc takes up to 7 GB per file, can only run a limited number of files in parallel based on memory
@@ -67,54 +67,54 @@ def aicsBatch(path, masterFilePath, type, channel, doAllStacks=False, doAllSlice
 		cpuCount -= 2
 	'''
 	pool = mp.Pool(processes=cpuCount)
-		
+
 	myTimer = bimpy.util.bTimer('aicsBatch ' + type + ' ' + str(channel))
-	
+
 	#
 	# build async pool
 	numFilesToAnalyze = 0
 	results = []
 	for filePath in filenames:
 		# file is full file path
-		
+
 		uFile, uInclude, uFirstSlice, uLastSlice = aicsUtil2.parseMasterFile(masterFilePath, filePath)
-		
+
 		if doAllSlices:
 			uFirstSlice = None
 			uLastSlice = None
-			
+
 		if doAllStacks or uInclude:
 			# path, trimPercent=trimPercent, firstSlice=uFirstSlice, lastSlice=uLastSlice, saveFolder=saveFolder
-			
+
 			if type == 'vasc':
 				args = [filePath, trimPercent, uFirstSlice, uLastSlice, saveFolder]
 				oneResult = pool.apply_async(vascDenRun, args=args)
 			elif type == 'cell':
 				args = [filePath, trimPercent]
 				oneResult = pool.apply_async(cellDenRun, args=args)
-			
+
 			if oneResult is not None:
 				results.append(oneResult)
 
 			numFilesToAnalyze += 1
-			
+
 	print('numFilesToAnalyze:', numFilesToAnalyze)
-	
+
 	#
 	# run
 	paramList = []
 	numResults = len(results)
 	for idx, result in enumerate(results):
 		print('=== running file', idx+1, 'of', numFilesToAnalyze)
-		
+
 		oneParamDict = None
 		oneParamDict = result.get()
-		
+
 		if oneParamDict is not None:
 			paramList.append(oneParamDict)
-		
+
 		print('  DONE with file idx:', idx+1, 'of', numResults)
-		
+
 	if paramList:
 		# path to *this source file
 		srcPath = os.path.dirname(os.path.abspath(__file__))
@@ -123,13 +123,13 @@ def aicsBatch(path, masterFilePath, type, channel, doAllStacks=False, doAllSlice
 		tmpFileNoExtension, tmpExt = tmpFile.split('.')
 		analysisFile = tmpFileNoExtension + '_ch' + str(channel) + '_out.csv'
 		saveAnalysisPath = os.path.join(srcPath, tmpPath, analysisFile)
-		
+
 
 		print('saving _out.csv:', saveAnalysisPath)
 		bimpy.util.dictListToFile(paramList, saveAnalysisPath)
-		
+
 	print(myTimer.elapsed())
-	
+
 if __name__ == '__main__':
 
 	'''
@@ -138,17 +138,17 @@ if __name__ == '__main__':
 	type = 'cell'
 	channel = 1
 	'''
-	
+
 	cpuCount = mp.cpu_count()
 
 	dataDir = '/Volumes/ThreeRed/nathan'
 	dataDir = '/Users/cudmore/data'
-	
+
 	date = '20200717'
 	#date = '20200720'
 	#date = '20200722'
 	#date = '20200724'
-	
+
 	# 1
 	if 1:
 		type = 'cell'
@@ -160,7 +160,7 @@ if __name__ == '__main__':
 		path = '/Volumes/ThreeRed/nathan' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
 		path = '/Users/cudmore/data' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
 		#path = '/home/cudmore/data' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
-			
+
 		aicsBatch(path, masterFilePath, type, channel, doAllStacks=True, cpuCount=cell_cpuCount)
 
 	# 2
@@ -168,12 +168,11 @@ if __name__ == '__main__':
 		type = 'vasc'
 		channel = 2
 		vasc_cpuCount = cpuCount - 8 # -5 on home macOS
-	
+
 		# leave this
 		masterFilePath = 'aicsBatch/' + date + '_cell_db.csv'
 		path = '/Volumes/ThreeRed/nathan' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
 		path = '/Users/cudmore/data' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
 		#path = '/home/cudmore/data' + '/' + date + '/' + date + '__A01_G001_*_ch' + str(channel) + '.tif'
-		
+
 		aicsBatch(path, masterFilePath, type, channel, doAllStacks=True, cpuCount=vasc_cpuCount)
-	

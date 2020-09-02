@@ -31,17 +31,19 @@ def myGetDefaultParamDict():
 	paramDict = OrderedDict()
 	#paramDict['analysisDate'] = ''
 	#paramDict['analysisTime'] = ''
-	
+
 	paramDict['path'] = ''
 	paramDict['fileNameBase'] = ''
 	#paramDict['f3_param'] =[[3, 0.001], [5, 0.001], [7, 0.001]]
 	paramDict['f3_param'] =[[5, 0.001], [8, 0.001]]
-	paramDict['medianKernelSize'] = (2,2,2)
+	print('\n\n20200901 on latop changed median kernel\n\n')
+	#paramDict['medianKernelSize'] = (2,2,2)
+	paramDict['medianKernelSize'] = (2,2,1)
 	paramDict['removeBelowThisPercent'] = 0.09
 	paramDict['removeSmallerThan'] = 2200 #2000 #600 #500
-	
+
 	return paramDict
-	
+
 '''
 def myGetDefaultStackDict():
 	"""
@@ -83,44 +85,44 @@ def myGetDefaultStackDict():
 	stackDict['finalMask_edt'] = {'type': 'edt', 'data': None}
 
 	return stackDict
-			
+
 ################################################################################
 def removeChannelFromName(name):
 	name = name.replace('_ch1', '')
 	name = name.replace('_ch2', '')
-	return name	
-	
+	return name
+
 ################################################################################
 def updateMasterCellDB(outFilePath, path, paramDict):
 	"""
 	todo: fix this to just append a row, as is is super complicated
-	
+
 	just append a row to a cs, this will somtimes result in csv being out of order
-	
+
 	outFilePath: assuming our master file path is _cell_db.csv, this will be _cell_db_out.csv
 	"""
-	
+
 	print('  .updateMasterCellDB() filename:', filename, 'masterFilePath:', masterFilePath)
-	
+
 	tmpPath, tmpFilename = os.path.split(path)
 	baseFileName, tmpExt = tmpFilename.split('.')
-	
+
 	#
 	# load
 	df = pd.read_csv(masterFilePath, index_col='index')
 
 	#
 	# important
-	df.index.name = 'index' 
-	
+	df.index.name = 'index'
+
 	#
 	# check that filename exists
 	dfTmp = df.loc[df['uFilename'] == filename]
 	if len(dfTmp) == 0:
 		# append after baseFilename
-		
+
 		# find row with baseFilname
-		
+
 		baseFilename = filename.replace('_ch1.tif', '')
 		baseFilename = baseFilename.replace('_ch2.tif', '')
 		baseFilename = baseFilename.replace('_ch3.tif', '')
@@ -128,7 +130,7 @@ def updateMasterCellDB(outFilePath, path, paramDict):
 		# find the row with basefilename (e.g. without (_ch1.tif, _ch2.tif)
 		baseFileRow = df.loc[df['uFilename'] == baseFilename]
 		baseFileIndex = baseFileRow.index[0]
-		
+
 		#line = pd.DataFrame([[np.nan] * len(df.columns)], columns=df.columns)
 		#df2 = pd.concat([df.iloc[:baseFileIndex], line, df.iloc[baseFileIndex:]]).reset_index(drop=True)
 
@@ -137,24 +139,24 @@ def updateMasterCellDB(outFilePath, path, paramDict):
 		newRow['uFilename'] = filename
 		df = pd.concat([df, newRow]).sort_index()
 		df = df.reset_index(drop=True)
-		
+
 		print('  updateMasterCellDB() appending row', newIdx)
 
 		#print('  ERROR: updateMasterCellDB() did not find uFilename:', filename, 'in masterFilePath:', masterFilePath)
 		#return
-		
+
 	for k,v in paramDict.items():
 		if not k in df.columns:
 			#print('    *** updateMasterCellDB() is appending column named:', k)
 			df[k] = ""
-		
+
 		df.loc[df['uFilename'] == filename, k] = str(v)
-	
+
 	#
 	# resave
 	print('    updateMasterCellDB() is saving', masterFilePath)
 	df.to_csv(masterFilePath, index_label='index')
-	
+
 ################################################################################
 def getAnalysisPath(masterFilePath):
 
@@ -164,20 +166,20 @@ def getAnalysisPath(masterFilePath):
 
 	df = pd.read_csv(masterFilePath, index_col=False) # index_col=False can be used to force pandas to not use the first column as the index
 	numRow = df.shape[0]
-	
+
 	uAnalysisPath = df['uAnalysisPath'].iloc[0]
-	
+
 	return uAnalysisPath
-	
+
 ################################################################################
 def getNextFile(masterFilePath, rowIdx=None, getThis='next'):
 	"""
 	Search masterFilePath for next file with 'uInclude'
-	
+
 	rowIdx: row index to start at, otherwise 0
 	getThis: in (next, previous)
 	"""
-	
+
 	if not os.path.isfile(masterFilePath):
 		print('  ERROR: getNextFile() did not find masterFilePath:', masterFilePath)
 		return None, None
@@ -187,7 +189,7 @@ def getNextFile(masterFilePath, rowIdx=None, getThis='next'):
 
 	if rowIdx is None:
 		rowIdx = -1
-	
+
 	if getThis == 'next':
 		# increment
 		rowIdx += 1
@@ -197,12 +199,12 @@ def getNextFile(masterFilePath, rowIdx=None, getThis='next'):
 		#rowIdx -= 1
 		endRow = 0
 		theRange = reversed(range(endRow, rowIdx))
-	
+
 	#print('rowIdx:', rowIdx, 'endRow:', endRow)
-	
+
 	theRowIndex = None
 	theFile = None
-	
+
 	# search from rowIdx+1 to end and look for 'uInclude'
 	for i in theRange:
 		uFilename = df['uFilename'].iloc[i]
@@ -213,30 +215,31 @@ def getNextFile(masterFilePath, rowIdx=None, getThis='next'):
 			theRowIndex = i
 			theFile = uFilename
 			break
-			
+
 	return theRowIndex, theFile
-	
+
 ################################################################################
 ################################################################################
 def pruneStackData(filename, stackData, firstSlice=None, lastSlice=None):
 	"""
 	prune stack slices by filename (row) and (firstslice, lastslice) specified in .csv file masterFilePath
-	
+
 	filename: full file name with _ch and .tif
 	"""
-	
+
 	numSlices = stackData.shape[0]
-	
+
 	if firstSlice is None and lastSlice is None:
 		pass
 	elif firstSlice > 0 and lastSlice < numSlices - 1:
 		#print('  ', 'pruning stackData slices')
-		print('  pruneStackData() from stackData', stackData.shape)	
+		print('  aicsUtil.pruneStackData() from stackData', stackData.shape)
+		print('    firstSlice:', firstSlice, 'lastSlice:', lastSlice)
 		stackData = stackData[firstSlice:lastSlice+1,:,:] # remember +1 !!!!!
-		print('  pruneStackData() pruned stackData', stackData.shape)	
+		print('  aicsUtil.pruneStackData() pruned stackData', stackData.shape)
 
 	return stackData
-	
+
 ################################################################################
 ################################################################################
 def setupAnalysis(path, trimPercent = 15, firstSlice=None, lastSlice=None, saveFolder='aicsAnalysis'):
@@ -246,12 +249,12 @@ def setupAnalysis(path, trimPercent = 15, firstSlice=None, lastSlice=None, saveF
 	saveFolder: allows us to save results in different folders
 	masterFilePath: must be specified, see analysis/xxx.csv
 	"""
-	
+
 	print('  setupAnalysis() path:', path)
-	
+
 	folderpath, filename = os.path.split(path)
 	filenamenoextension, tmpExt = filename.split('.')
-	
+
 	savePath = os.path.join(folderpath, saveFolder)
 	saveBase = os.path.join(savePath, filenamenoextension)
 
@@ -266,32 +269,32 @@ def setupAnalysis(path, trimPercent = 15, firstSlice=None, lastSlice=None, saveF
 		channel = 2
 	elif filename.endswith('_ch3.tif'):
 		channel = 3
-	
+
 	#print('  savePath:', savePath)
 	print('    channel:', channel, 'saveBase:', saveBase) # append _labeled.tif to this
-		
+
 	#
 	# make a dictionary of dictionaries to hold (type, data) for each step
 	stackDict = myGetDefaultStackDict()
-	
+
 	#
 	# save (stack pixels, pruned stack pixels, analysis parameters, number of original labels)
 	paramDict = myGetDefaultParamDict()
-	
+
 	paramDict['analysisDate'] = datetime.today().strftime('%Y%m%d')
 	paramDict['analysisTime'] = datetime.now().strftime('%H:%M:%S')
-	
+
 	paramDict['channel'] = channel
 
 	paramDict['fileNameBase'] = filenamenoextension
-	
+
 	#
 	# load
 	print('    setupAnalysis() loading stack:', path)
 	stackData, tiffHeader = bimpy.util.bTiffFile.imread(path)
 	paramDict['tiffHeader'] = tiffHeader
 	_printStackParams('  stackData', stackData)
-	
+
 	paramDict['zVoxel'] = tiffHeader['zVoxel']
 	paramDict['xVoxel'] = tiffHeader['xVoxel']
 	paramDict['yVoxel'] = tiffHeader['yVoxel']
@@ -299,7 +302,7 @@ def setupAnalysis(path, trimPercent = 15, firstSlice=None, lastSlice=None, saveF
 	paramDict['zOrigPixel'] = stackData.shape[0]
 	paramDict['xOrigPixel'] = stackData.shape[1] # rows
 	paramDict['yOrigPixel'] = stackData.shape[2]
-		
+
 	#
 	# trim
 	trimPixels = math.floor( trimPercent * stackData.shape[1] / 100 ) # ASSUMING STACKS ARE SQUARE
@@ -313,13 +316,13 @@ def setupAnalysis(path, trimPercent = 15, firstSlice=None, lastSlice=None, saveF
 		_printStackParams('to', stackData)
 	else:
 		print('    WARNING: not trimming lower/right x/y !!!')
-		
+
 	#
 	# keep slices
 	# will return None when user has not specified first/last
 	stackData = pruneStackData(filename, stackData, firstSlice=firstSlice, lastSlice=lastSlice) # can be None
 	stackDict['raw']['data'] = stackData
-	
+
 	paramDict['firstSlice'] = firstSlice
 	paramDict['lastSlice'] = lastSlice
 
@@ -340,23 +343,67 @@ def _printStackParams(name, myStack):
 		'mean:', np.mean(myStack),
 		'std:', np.std(myStack),
 		)
+################################################################################
+def zExpandStack(path):
+	stackData, stackHeader = bimpy.util.bTiffFile.imread(path)
+	print('zExpandStack() path:', path)
+	print('  ', stackData.shape)
+
+	xVoxel = stackHeader['xVoxel']
+	zVoxel = stackHeader['zVoxel']
+	print('  xVoxel:', xVoxel)
+	print('  zVoxel:', zVoxel)
+
+	zMult = zVoxel / xVoxel
+	print('  zMult:', zMult)
+	zMult = round(zMult) # if zMult==3 we add 1 above and one below
+	'''
+	if (zMult % 2) == 0:
+		# already even
+		pass
+	else:
+		zMult += 1
+	'''
+	m = stackData.shape[1]
+	n = stackData.shape[2]
+	numSlices = stackData.shape[0]
+	newNumSlices = numSlices * zMult # assuming zMult is even
+	print('  newNumSlices:', newNumSlices)
+
+	newShape = (newNumSlices, m, n)
+	newData = np.ndarray(newShape, dtype=np.uint8)
+	for i in range(numSlices):
+		newIdx = 1 + i * zMult # assuming zMult==3
+		#print('  newIdx:', newIdx)
+		newData[newIdx-1] = stackData[i]
+		newData[newIdx] = stackData[i]
+		newData[newIdx+1] = stackData[i]
+
+	#
+	# save
+	savePath = '/Users/cudmore/Desktop/out.tif'
+	print('  saving:', savePath)
+	bimpy.util.bTiffFile.imsave(savePath, newData, overwriteExisting=True)
 
 if __name__ == '__main__':
-	
-	path = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_0003_ch2.tif'
-	trimPercent = 15
-	masterFilePath = 'aicsBatch/20200717_cell_db.csv'
-	
-	uFIle, uInclude, uFirstSlice, uLastSlice = parseMasterFile(masterFilePath, path)
-	
-	filename, paramDict, stackDict = \
-		setupAnalysis(path, trimPercent = 15, firstSlice=uFirstSlice, lastSlice=uLastSlice)
-	
-	print('filename:', filename)
-	print('paramDict:', paramDict)
-	#print('stackDict:', stackDict)
-	
-	#filename = '20200717__A01_G001_0003'
-	updateMasterCellDB(masterFilePath, filename, paramDict)
-	
-	
+
+	if 1:
+		path = '/Users/cudmore/Box/data/20200717/20200717__A01_G001_0014_ch2.tif'
+		zExpandStack(path)
+
+	if 0:
+		path = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_0003_ch2.tif'
+		trimPercent = 15
+		masterFilePath = 'aicsBatch/20200717_cell_db.csv'
+
+		uFIle, uInclude, uFirstSlice, uLastSlice = parseMasterFile(masterFilePath, path)
+
+		filename, paramDict, stackDict = \
+			setupAnalysis(path, trimPercent = 15, firstSlice=uFirstSlice, lastSlice=uLastSlice)
+
+		print('filename:', filename)
+		print('paramDict:', paramDict)
+		#print('stackDict:', stackDict)
+
+		#filename = '20200717__A01_G001_0003'
+		updateMasterCellDB(masterFilePath, filename, paramDict)
