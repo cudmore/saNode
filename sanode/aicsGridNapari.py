@@ -22,7 +22,6 @@ import napari
 
 import aicsUtil2 # does not import bimpy
 
-
 ############################################################
 def getSnakeGrid(gridShape):
 	"""
@@ -371,6 +370,8 @@ def aicsGridNapari(aicsGridParam):
 				napariChannelList.append(channel)
 				napariPostfixList.append(finalPostfixStr)
 
+			# save to tiff for import of bigData into bImPy
+			tifffile.imsave('/Users/cudmore/Desktop/bigData_ch' + str(channel) + '.tif', rawBlock)
 			blockNum += 1
 			
 	if len(rawBlockList):

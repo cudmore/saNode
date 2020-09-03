@@ -200,6 +200,7 @@ def cellDenRun(path, trimPercent, verbose=False):
 if __name__ == '__main__':
 	
 	path = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_0014_ch1.tif'
+	path = '/Users/cudmore/data/testing/20200717__A01_G001_0014a_ch1.tif'
 	trimPercent = 15
 	
 	paramDict = cellDenRun(path, trimPercent)
@@ -207,7 +208,7 @@ if __name__ == '__main__':
 	print('paramDict:')
 	print(json.dumps(paramDict, indent=4))
 	
-	doNapari = True
+	doNapari = False
 	if doNapari:
 		aicsOneNapari(path, channels=[1])
 	

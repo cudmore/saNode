@@ -295,7 +295,10 @@ if __name__ == '__main__':
 		# after expanding with each slice with iteself above and below
 		path = '/Users/cudmore/Box/data/20200717/20200717__A01_G001_0014a_ch2.tif'
 		path = '/Users/cudmore/data/testing/20200717__A01_G001_0014_ch2.tif'
-		
+
+		# z padded stack (each slice is replicated above/below)
+		path = '/Users/cudmore/data/testing/20200717__A01_G001_0014a_ch2.tif'
+
 		masterFilePath = 'aicsBatch/20200717_cell_db.csv'
 		#outFilePath = 'aicsBatch/20200717_cell_db_out.csv'
 
