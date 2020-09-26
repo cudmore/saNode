@@ -288,6 +288,7 @@ if __name__ == '__main__':
 
 	# run one file
 	if 1:
+		"""
 		path = '/Users/cudmore/box/data/nathan/20200518/20200518__A01_G001_0003_ch2.tif'
 		path = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_0014_ch2.tif'
 		path = '/Users/cudmore/Box/data/20200717/20200717__A01_G001_0014_ch2.tif'
@@ -301,7 +302,15 @@ if __name__ == '__main__':
 
 		masterFilePath = 'aicsBatch/20200717_cell_db.csv'
 		#outFilePath = 'aicsBatch/20200717_cell_db_out.csv'
+		"""
 
+		trimPercent = 15
+
+		# 20200924, this is a subset of entire grid (not a single stack)
+		# i don't want a trim percent here???
+		path = '/home/cudmore/data/nathan/20200814_SAN3_BOTTOM_tail/20200814_SAN3_BOTTOM_tail_ch2.tif'
+		trimPercent = None # for the small subset, we don't trim it
+		
 		saveFolder = 'aicsAnalysis'
 
 		uFirstSlice = None
@@ -310,7 +319,6 @@ if __name__ == '__main__':
 		#print('uFirstSlice:', uFirstSlice, 'uLastSlice:', uLastSlice)
 		#if uInclude:
 		if 1:
-			trimPercent = 15
 			paramDict = vascDenRun(path, trimPercent=trimPercent, firstSlice=uFirstSlice, lastSlice=uLastSlice, saveFolder=saveFolder)
 			#
 			# todo: rewrite updateMasterCellDB

@@ -9,12 +9,12 @@ import tifffile
 import matplotlib.pyplot as plt
 
 def myMakeGrid(path, prefixStr, channel, nRow, nCol):
-    
+
     if channel == 1:
         postfixStr = '_ch1.tif'
     elif channel == 2:
         postfixStr = '_ch2.tif'
-        
+
     # make nRow X nCol grid of integers
     tmpIntegerGrid = np.arange(1,nRow*nCol+1) # Values are generated within the half-open interval [start, stop)
     tmpIntegerGrid = np.reshape(tmpIntegerGrid, (nRow, nCol)) # reshape into nRow X nCol
@@ -36,22 +36,22 @@ def myMakeGrid(path, prefixStr, channel, nRow, nCol):
             # raw data
             stackData = tifffile.imread(tiffPath)
             tifDataList.append(stackData)
-            
+
             # max project
             theMax = np.max(stackData, axis=0)
             tifMaxList.append(theMax)
-            
+
             # common shape
             if commonShape is None:
                 commonShape = stackData.shape
                 print('myMakeGrid() commonShape:', commonShape)
-                
+
         else:
             # todo: This is a bug if we missing files
             #print('  WARNING: Did not find file:', tiffPath)
             tifDataList.append(None)
             tifMaxList.append(None)
-    
+
     #
     return tifDataList, tifMaxList, filenames, integerGrid
 
@@ -68,7 +68,7 @@ def plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList, plot
 	figHeight = figWidth * heightMult
 
 	print('figWidth:', 'figHeight:', figHeight)
-	
+
 	# make (nRow x nCol) subplots
 	fig, axs = plt.subplots(nrows=nRow, ncols=nCol,
 							sharex=True, sharey=True, figsize=(figWidth,figHeight), constrained_layout=False)
@@ -86,15 +86,15 @@ def plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList, plot
 
 		if maxData is None:
 			continue
-			
+
 		#axs[plotIdx].imshow(maxData, cmap=cmap) # looks awefull ???
 		axs[plotIdx].imshow(maxData, aspect='equal')
-	
+
 
 		#print('plotIdx:', plotIdx, 'fileIdx:', fileIdx)
-	
+
 		# put label above image
-	
+
 		# put label in middle of image
 		if plotLabels:
 			fileIdxLabel = idx + 1 # snakes filename 0001, 0002, 0003, ...
@@ -111,7 +111,7 @@ def plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList, plot
 
 	# needed when we are in a script (not in Jupyter)
 	plt.show()
-	
+
 if __name__ == '__main__':
 
 	# either this
@@ -128,14 +128,27 @@ if __name__ == '__main__':
 		nRow = 17
 		nCol = 7
 
-	if 1:
+	if 0:
 		folderPath = '/Users/cudmore/data/20200720'
 		prefixStr = '20200720__A01_G001_'
 		nRow = 12
 		nCol = 4
 
+	if 1:
+		folderPath = '/home/cudmore/data/nathan/20200901_SAN4_TOP'
+		prefixStr = '20200901__A01_G001_'
+		nRow = 12
+		nCol = 6
+
+	if 0:
+		folderPath = '/home/cudmore/data/nathan/20200914_SAN4_BOTTOM'
+		prefixStr = '20200914__A01_G001_'
+		nRow = 14
+		nCol = 6
+
+
 	# specify the channel
-	channel = 1
+	channel = 2
 	#channel = 2 # does not look so good for CD-31 because of endocardium
 
 	# myMakeGrid is defined above
@@ -147,7 +160,7 @@ if __name__ == '__main__':
 	fileIdxList = fileIdxMatrix.ravel() # flatten 2d to 1d, we still need to know (nRow, nCol)
 
 	print('done with myMakeGrid()')
-	
+
 	#
 	# plot
 	plotLabels = False
@@ -156,6 +169,3 @@ if __name__ == '__main__':
 	#wSpace = -0.1 # to remove border
 	#hSpace = -0.1
 	plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList, plotLabels, wSpace, hSpace)
-	
-	
-	

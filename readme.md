@@ -40,7 +40,7 @@ git clone https://github.com/AllenInstitute/aics-segmentation.git
 pip install numpy
 pip install itkwidgets==0.14.0
 
-# this fails
+# this fails on macOS
 #pip install -e aics-segmentation/.[all]
 # with this error
 # ERROR: Could not find a version that satisfies the requirement aicspylibczi>=2.5.0 (from aicsimageio>=3.0.0->aicssegmentation==0.1.21.dev0) (from versions: none)
@@ -50,10 +50,24 @@ pip install itkwidgets==0.14.0
 pip install -e /Users/Sites/bImPy/.
 
 # downgrade tifffile (for aics)
+# do not do this on Linux
 pip install tifffile==0.15.1
 ```
 
-### Make a directory to work in
+Installing on linux, downgrading tiffile is not neccessary? (maybe because aics git has been updated?)
+
+This was the error on downgrading tifffile
+
+```
+ERROR: After October 2020 you may experience errors when installing or updating packages. This is because pip will change the way that it resolves dependency conflicts.
+
+We recommend you use --use-feature=2020-resolver to test your packages with the new resolver before it becomes the default.
+
+napari 0.3.7 requires tifffile>=2020.2.16, but you'll have tifffile 0.15.1 which is incompatible.
+aicsimageio 3.3.1 requires tifffile>=2019.7.26.2, but you'll have tifffile 0.15.1 which is incompatible.
+```
+
+### [OLD NOT NEEDED] Make a directory to work in
 
 ```
 mkdir myAnalysis

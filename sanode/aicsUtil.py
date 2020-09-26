@@ -305,18 +305,21 @@ def setupAnalysis(path, trimPercent = 15, firstSlice=None, lastSlice=None, saveF
 
 	#
 	# trim
-	trimPixels = math.floor( trimPercent * stackData.shape[1] / 100 ) # ASSUMING STACKS ARE SQUARE
-	trimPixels = math.floor(trimPixels / 2)
-	if trimPixels > 0:
-		print('    trimming', trimPixels, 'lower/right pixels')
-		_printStackParams('from', stackData)
-		thisHeight = stackData.shape[1] - trimPixels
-		thisWidth = stackData.shape[2] - trimPixels
-		stackData = stackData[:, 0:thisHeight, 0:thisWidth]
-		_printStackParams('to', stackData)
+	if trimPercent is not None:
+		trimPixels = math.floor( trimPercent * stackData.shape[1] / 100 ) # ASSUMING STACKS ARE SQUARE
+		trimPixels = math.floor(trimPixels / 2)
+		if trimPixels > 0:
+			print('    trimming', trimPixels, 'lower/right pixels')
+			_printStackParams('from', stackData)
+			thisHeight = stackData.shape[1] - trimPixels
+			thisWidth = stackData.shape[2] - trimPixels
+			stackData = stackData[:, 0:thisHeight, 0:thisWidth]
+			_printStackParams('to', stackData)
+		else:
+			print('    WARNING: not trimming lower/right x/y !!!')
 	else:
-		print('    WARNING: not trimming lower/right x/y !!!')
-
+		print('aicsUtil.setupAnalysis() is NOT trimming')
+		
 	#
 	# keep slices
 	# will return None when user has not specified first/last
@@ -349,7 +352,7 @@ def zExpandStack(path):
 	move to bimpy.util
 	"""
 	print('\n\nMOVED TO bimpy.util\n\n')
-	
+
 	stackData, stackHeader = bimpy.util.bTiffFile.imread(path)
 	print('zExpandStack() path:', path)
 	print('  ', stackData.shape)

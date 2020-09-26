@@ -17,21 +17,22 @@ import tifffile
 import aicsGridNapari
 
 ################################################################################
-def rawDataDriver(folderStr, dateStr, gridShape):
+def rawDataDriver(folderStr, dateStr, gridShape, gDataPath='', smallDict=None):
 	"""
 	Simplified version to open a raw data viewer
-	
+
 	#folderStr : name of the folder with the raw data
 	#dateStr: yyyymmdd in file names, like 20200717__A01_G001_0009_ch2.tif
 	"""
-	import aicsDataPath
-	gDataPath = aicsDataPath.getDataPath()
+	if not gDataPath:
+		import aicsDataPath
+		gDataPath = aicsDataPath.getDataPath()
 
 	aicsGridParam = mySetDefaultGridParams(gDataPath, folderStr, dateStr, gridShape)
 	if aicsGridParam is None:
 		pass
 	else:
-		aicsGridNapari.aicsGridNapari(aicsGridParam)
+		aicsGridNapari.aicsGridNapari(aicsGridParam, smallDict=smallDict)
 
 ################################################################################
 def myGetDefaultGridParams():
@@ -50,22 +51,22 @@ def myGetDefaultGridParams():
 	aicsGridParam['trimPercent'] = None
 	#aicsGridParam['doUseInclude'] = doUseInclude
 	#aicsGridParam['doUseFirstLast'] = doUseFirstLast
-	
+
 	return aicsGridParam
 
 ################################################################################
 def mySetDefaultGridParams(dataPath, folderStr, dateStr, gridShape, dataFolder='raw'):
 	"""
 	set up a default aicsGRidParam given a folder name
-	
+
 	parameters:
 		dataFolder : is from (raw, aicsAnalysis), if aicsAnalysis can be folder name like aicsAnalysis2
 	"""
-	
+
 	defaultTrimePercent = 15
-	
+
 	aicsGridParam = myGetDefaultGridParams()
-	
+
 	aicsGridParam['dataPath'] = dataPath
 	aicsGridParam['folderStr'] = folderStr
 	aicsGridParam['dateStr'] = dateStr
@@ -78,7 +79,7 @@ def mySetDefaultGridParams(dataPath, folderStr, dateStr, gridShape, dataFolder='
 	if dataFolder == 'raw':
 		path = os.path.join(dataPath, folderStr)
 	else:
-		path = os.path.join(dataPath, folderStr, dataFolder)	
+		path = os.path.join(dataPath, folderStr, dataFolder)
 	if not os.path.isdir(path):
 		print('ERROR: mySetDefaultGridParams() did not find path:', path)
 		print('   did you specify "dataPath" properly? It is:', dataPath)
@@ -86,11 +87,11 @@ def mySetDefaultGridParams(dataPath, folderStr, dateStr, gridShape, dataFolder='
 		print('   did you specify "dateStr" properly? It is:', dateStr)
 		return None
 	aicsGridParam['path'] = path
-	
+
 	if not os.path.isdir(dataPath):
 		print('ERROR: mySetDefaultGridParams() did not find date folder:', dataPath)
 		return None
-		
+
 	# cell db
 	cell_dbFile = folderStr + '_cell_db.csv'
 	masterFilePath = os.path.join('aicsBatch', cell_dbFile)
@@ -122,7 +123,7 @@ def mySetDefaultGridParams(dataPath, folderStr, dateStr, gridShape, dataFolder='
 		print('  ', ch1Path)
 		print('  ', ch2Path)
 		return None
-		
+
 	aicsGridParam['commonVoxelSize'] = commonVoxelSize
 
 	# if trimming, common shape is AFTER trimming
@@ -141,16 +142,16 @@ def mySetDefaultGridParams(dataPath, folderStr, dateStr, gridShape, dataFolder='
 	#aicsGridParam['prefixStr'] = prefixStr
 	#aicsGridParam['commonShape'] =  commonShape# shape of each stack in aicsAnalysis (already trimmed)
 	#aicsGridParam['commonVoxelSize'] = commonVoxelSize
-	
+
 	aicsGridParam['channelList'] = [1,2] # USER
-	
+
 	if dataFolder == 'raw':
 		aicsGridParam['finalPostfixList'] = ['']
 	else:
 		aicsGridParam['finalPostfixList'] = ['', '_mask', '_labeled']
-	
+
 	aicsGridParam['gridShape'] = gridShape
-	
+
 	'''
 	aicsGridParam['gridShape'] = () # USER
 	aicsGridParam['finalPostfixList'] = finalPostfixList # USER
@@ -158,20 +159,20 @@ def mySetDefaultGridParams(dataPath, folderStr, dateStr, gridShape, dataFolder='
 	#aicsGridParam['doUseInclude'] = doUseInclude
 	#aicsGridParam['doUseFirstLast'] = doUseFirstLast
 	'''
-	
+
 	aicsGridParam['doUseInclude'] = False # USER
 	aicsGridParam['doUseFirstLast'] = False # USER
 
 	return aicsGridParam
-	
+
 ################################################################################
 def readVoxelSize(path, getShape=False, verbose=False):
 	"""
 	is also in bimpy.util
-	
+
 	here i am return (z, x, y)
 	"""
-	
+
 	with tifffile.TiffFile(path) as tif:
 		xVoxel = 1
 		yVoxel = 1
@@ -221,7 +222,7 @@ def readVoxelSize(path, getShape=False, verbose=False):
 		yPixels = tag.value
 
 		myShape = (numImages, xPixels, yPixels)
-		
+
 		if getShape:
 			return zVoxel, xVoxel, yVoxel, (myShape)
 		else:
@@ -239,12 +240,12 @@ def parseMasterFile(masterFilePath, filePath, dfMasterFile=None):
 			print('  ERROR: parseMasterFile() did not find masterFilePath:', masterFilePath)
 			return None, None, None, None
 		df = pd.read_csv(masterFilePath)
-		
+
 	tmpPath, tmpFilename = os.path.split(filePath)
 	filename, ext = tmpFilename.split('.')
-	
+
 	#print('    parseMasterFile() loading .csv to get (uInclude, uFirstslice, uLastslice) for uFilename:', filename, 'from masterFilePath:', masterFilePath)
-	
+
 	#df = pd.read_csv(masterFilePath)
 
 	uInclude = None # changed from True on 20200813
@@ -254,7 +255,7 @@ def parseMasterFile(masterFilePath, filePath, dfMasterFile=None):
 	baseFilename = filename.replace('_ch1', '')
 	baseFilename = baseFilename.replace('_ch2', '')
 	baseFilename = baseFilename.replace('_ch3', '')
-		
+
 	if df is not None:
 		df2 = df.loc[df['uFilename'] == baseFilename, 'uFirstSlice']
 		if df2.shape[0] == 0:
@@ -263,16 +264,16 @@ def parseMasterFile(masterFilePath, filePath, dfMasterFile=None):
 			thisLineDF = df[df['uFilename'] == baseFilename]
 
 			# is it in uInclude
-			tmpInclude = df.loc[df['uFilename'] == baseFilename, 'uInclude'].iloc[0]  
+			tmpInclude = df.loc[df['uFilename'] == baseFilename, 'uInclude'].iloc[0]
 			if pd.notnull(tmpInclude):
 				uInclude = int(tmpInclude)
 				#print('    read uFilename:', baseFilename, 'uInclude:', uInclude)
 			else:
 				#print('    ERROR: did not find "uInclude" for uFilename:', baseFilename)
 				uInclude = False
-				
+
 			# firstslice
-			tmpFirstSlice = df.loc[df['uFilename'] == baseFilename, 'uFirstSlice'].iloc[0]  
+			tmpFirstSlice = df.loc[df['uFilename'] == baseFilename, 'uFirstSlice'].iloc[0]
 			if pd.notnull(tmpFirstSlice):
 				firstSlice = int(tmpFirstSlice)
 				#print('    read uFilename:', baseFilename, 'uFirstSlice:', firstSlice)
@@ -280,21 +281,21 @@ def parseMasterFile(masterFilePath, filePath, dfMasterFile=None):
 				#print('    WARNING: did not find "uFirstSlice" for uFilename:', baseFilename)
 				pass
 			# lastslice
-			tmpLastSlice = df.loc[df['uFilename'] == baseFilename, 'uLastSlice'].iloc[0]  
+			tmpLastSlice = df.loc[df['uFilename'] == baseFilename, 'uLastSlice'].iloc[0]
 			if pd.notnull(tmpLastSlice):
 				lastSlice = int(tmpLastSlice)
 				#print('    read uFilename:', baseFilename, 'uLastSlice:', lastSlice)
 			else:
 				#print('    WARNING: did not find "uLastSlice" for uFilename:', baseFilename)
 				pass
-				
+
 			# uVascThreshold
-			
+
 	else:
 		print('ERROR: pruneStackData() did not read df from masterFilePath:', masterFilePath)
 
 	return baseFilename, uInclude, firstSlice, lastSlice
-	
+
 ##############################################################
 def trimStack(stackData, trimPercent, verbose=False):
 	trimPixels = math.floor( trimPercent * stackData.shape[1] / 100 ) # ASSUMING STACKS ARE SQUARE
@@ -308,22 +309,16 @@ def trimStack(stackData, trimPercent, verbose=False):
 		if verbose: print('    final shape:', stackData.shape)
 	else:
 		print('    WARNING: trimStack() not trimming lower/right x/y !!!')
-	
+
 	return stackData
 
 ##############################################################
 def getTrimShape(stackShape, trimPercent):
 	trimPixels = math.floor( trimPercent * stackShape[1] / 100 ) # ASSUMING STACKS ARE SQUARE
 	trimPixels = math.floor(trimPixels / 2)
-	
+
 	trimSlices = stackShape[0] # not changing slices
 	trimHeight = stackShape[1] - trimPixels
 	trimWidth = stackShape[2] - trimPixels
-	
+
 	return (trimSlices, trimHeight, trimWidth)
-	
-	
-	
-	
-	
-	
