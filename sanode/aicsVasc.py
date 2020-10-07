@@ -308,9 +308,17 @@ if __name__ == '__main__':
 
 		# 20200924, this is a subset of entire grid (not a single stack)
 		# i don't want a trim percent here???
-		path = '/home/cudmore/data/nathan/20200814_SAN3_BOTTOM_tail/20200814_SAN3_BOTTOM_tail_ch2.tif'
+		#path = '/home/cudmore/data/nathan/20200814_SAN3_BOTTOM_tail/20200814_SAN3_BOTTOM_tail_ch2.tif'
+
+		##
+		##
+		# this is output of something like sanode/nathan_20200901.py
+		#path = '/home/cudmore/data/nathan/SAN4/SAN4_head_ch2.tif'
+		#path = '/home/cudmore/data/nathan/SAN4/SAN4_mid_ch2.tif'
+		path = '/home/cudmore/data/nathan/SAN4/SAN4_tail_ch2.tif'
+
 		trimPercent = None # for the small subset, we don't trim it
-		
+
 		saveFolder = 'aicsAnalysis'
 
 		uFirstSlice = None

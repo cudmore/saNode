@@ -27,7 +27,9 @@ def myMakeGrid(path, prefixStr, channel, nRow, nCol):
     # make all file names be full path
     filenames = [os.path.join(path, x) for x in filenames]
 
-    # check that all files exist, display will fail when loading file that does not exist
+    print(f'myMakeGrid() parsing {len(filenames)} files.')
+
+	# check that all files exist, display will fail when loading file that does not exist
     tifDataList = []
     tifMaxList = []
     commonShape = None
@@ -37,7 +39,9 @@ def myMakeGrid(path, prefixStr, channel, nRow, nCol):
             stackData = tifffile.imread(tiffPath)
             tifDataList.append(stackData)
 
-            # max project
+            #print(idx, stackData.shape, tiffPath)
+
+			# max project
             theMax = np.max(stackData, axis=0)
             tifMaxList.append(theMax)
 
@@ -49,6 +53,7 @@ def myMakeGrid(path, prefixStr, channel, nRow, nCol):
         else:
             # todo: This is a bug if we missing files
             #print('  WARNING: Did not find file:', tiffPath)
+            print('myMakeGrid() did not find file:', tiffPath)
             tifDataList.append(None)
             tifMaxList.append(None)
 
@@ -75,6 +80,8 @@ def plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList, plot
 	axs = axs.ravel() # flatten all subplots into [0, 1, 2, ...]
 
 	for idx, fileName in enumerate(fileNameList):
+		#print('plotGrid():', idx, fileName)
+
 		fileIdx = fileIdxList[idx] # this list is snaked
 		plotIdx = fileIdx - 1 # matplotlib is 0 based, our file names are 1 based
 
@@ -112,6 +119,8 @@ def plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList, plot
 	# needed when we are in a script (not in Jupyter)
 	plt.show()
 
+	print('done')
+
 if __name__ == '__main__':
 
 	# either this
@@ -128,13 +137,13 @@ if __name__ == '__main__':
 		nRow = 17
 		nCol = 7
 
-	if 0:
-		folderPath = '/Users/cudmore/data/20200720'
-		prefixStr = '20200720__A01_G001_'
-		nRow = 12
-		nCol = 4
-
 	if 1:
+		folderPath = '/home/cudmore/data/nathan/20200720'
+		prefixStr = '20200720__A01_G001_'
+		nRow = 8 #12
+		nCol = 6 #4
+
+	if 0:
 		folderPath = '/home/cudmore/data/nathan/20200901_SAN4_TOP'
 		prefixStr = '20200901__A01_G001_'
 		nRow = 12
@@ -160,12 +169,12 @@ if __name__ == '__main__':
 	fileIdxList = fileIdxMatrix.ravel() # flatten 2d to 1d, we still need to know (nRow, nCol)
 
 	print('done with myMakeGrid()')
-
+	print(f'plotting {len(fileNameList)} files')
 	#
 	# plot
-	plotLabels = False
-	wSpace = 0.02 # a little white space between stacks
-	hSpace = 0.02
-	#wSpace = -0.1 # to remove border
-	#hSpace = -0.1
+	plotLabels = True
+	#wSpace = 0.02 # a little white space between stacks
+	#hSpace = 0.02
+	wSpace = -0.1 # to remove border
+	hSpace = -0.1
 	plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList, plotLabels, wSpace, hSpace)

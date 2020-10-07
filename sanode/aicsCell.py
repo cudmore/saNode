@@ -18,35 +18,36 @@ from aicsOneNapari import aicsOneNapari
 ################################################################################
 def cellDenRun(path, trimPercent, verbose=False):
 	print('cellDen.myRun() path:', path)
-		
+
 	filename, paramDict, stackDict = \
-			setupAnalysis(path, trimPercent = 15, firstSlice=None, lastSlice=None, saveFolder='aicsAnalysis')
+			setupAnalysis(path, trimPercent = trimPercent, \
+			firstSlice=None, lastSlice=None, saveFolder='aicsAnalysis')
 	#filename, paramDict, stackDict = setupAnalysis(path, trimPercent, masterFilePath=masterFilePath)
-	
+
 	if stackDict['raw']['data'] is None:
 		print('=== *** === cellDen.myRun() aborting, got None stack data')
 		return None
 
 	# set the algorithm
 	paramDict['algorithm'] = 'cellDen'
-	
+
 	# get some local variables
 	stackData = stackDict['raw']['data']
 	tiffHeader = paramDict['tiffHeader']
 	#saveBase = paramDict['saveBase']
 	#saveBase2 = paramDict['saveBase2']
 	savePath = paramDict['saveBase']
-	
+
 	numSlices = stackData.shape[0]
-	
+
 	#
 	# algorithm
 	#
-	
+
 	numSlices = stackData.shape[0]
-	
+
 	currentStack = stackData
-	
+
 	'''
 	print('  ', 'running my_suggest_normalization_param() and my_intensity_normalization()')
 	#normData = stackData.copy()
@@ -54,9 +55,9 @@ def cellDenRun(path, trimPercent, verbose=False):
 	for i in range(numSlices):
 		oneSlice = currenStack[i,:,:]
 		low_ratio, high_ratio = my_suggest_normalization_param(oneSlice)
-		
+
 		#print(i, low_ratio, high_ratio)
-		
+
 		intensity_scaling_param = [low_ratio, high_ratio]
 		#sliceNormData = intensity_normalization(oneSlice, scaling_param=intensity_scaling_param)
 		sliceNormData = my_intensity_normalization(oneSlice, scaling_param=intensity_scaling_param)
@@ -65,7 +66,7 @@ def cellDenRun(path, trimPercent, verbose=False):
 
 	currentStack = normData
 	'''
-	
+
 	#
 	# median filter
 	'''
@@ -73,17 +74,17 @@ def cellDenRun(path, trimPercent, verbose=False):
 	medianKernelSize = (3, 5, 5)
 	filteredStack = bimpy.util.morphology.medianFilter(currentStack, kernelSize=medianKernelSize)
 	'''
-	
+
 	# gaussian
 	# will not accept np.float16
 	gaussianKernelSize = (1,1,1)
 	paramDict['gaussianKernelSize'] = gaussianKernelSize
 	filteredStack = bimpy.util.morphology.gaussianFilter(currentStack, kernelSize=gaussianKernelSize, verbose=False)
 	if verbose: _printStackParams('filteredStack', filteredStack)
-	
+
 	stackDict['filtered']['data'] = filteredStack
 	#paramDict['medianKernelSize'] = medianKernelSize
-	
+
 	currentStack = filteredStack
 
 	#
@@ -93,22 +94,22 @@ def cellDenRun(path, trimPercent, verbose=False):
 	thresholdStack = bimpy.util.morphology.threshold_remove_lower_percent(currentStack, removeBelowThisPercent=removeBelowThisPercent)
 	paramDict['thresholdAlgorithm'] = 'threshold_remove_lower_percent'
 	#paramDict['thresholdScale'] = myScale
-	
+
 	'''
 	for i in range(numSlices):
 		currentSlice = currentStack[i,:,:]
 		print(i, np.min(currentSlice), np.max(currentSlice))
 	'''
-	
+
 	#thresholdStack = bimpy.util.morphology.threshold_min(currentStack, min=15)
-	
+
 	# otsu
 	# trying otsu because data from 20200518 looks like there are 2 sets of intensities???
 	'''
 	thresholdStack = bimpy.util.morphology.threshold_otsu(currentStack)
 	paramDict['thresholdAlgorithm'] = 'threshold_otsu'
 	'''
-	
+
 	# see: https://github.com/AllenInstitute/aics-segmentation/blob/master/lookup_table_demo/playground_st6gal1.ipynb
 	'''
 	if verbose: print('  ', 'running MO_threshold ...')
@@ -117,13 +118,13 @@ def cellDenRun(path, trimPercent, verbose=False):
 	thresholdStack, object_for_debug = MO(currentStack, global_thresh_method='tri', object_minArea=object_minArea, return_object=True)
 	_printStackParams('thresholdStack', thresholdStack)
 	'''
-	
+
 	currentStack = thresholdStack
-	
+
 	#
 	# dilate
 	#thresholdStack = bimpy.util.morphology.binary_dilation(currentStack, iterations=2)
-	
+
 	#stackDict['threshold']['data'] = thresholdStack
 
 	finalMask = currentStack
@@ -132,7 +133,7 @@ def cellDenRun(path, trimPercent, verbose=False):
 	# fill holes
 	finalMask = bimpy.util.morphology.binary_fill_holes(currentStack)
 	if verbose: _printStackParams('finalMask', finalMask)
-	
+
 	currentStack = finalMask
 
 	#
@@ -142,13 +143,13 @@ def cellDenRun(path, trimPercent, verbose=False):
 	paramDict['removeSmallerThan'] = removeSmallerThan
 	labeledMask, returnSmallLabels, labelIndices, labelCounts = \
 		bimpy.util.morphology.removeSmallLabels2(labeledMask, removeSmallerThan=removeSmallerThan)
-	
+
 	labeledMask = labeledMask > 0
 	labeledMask = labeledMask.astype(np.uint8)
-	
+
 	currentStack = labeledMask
 	finalMask = labeledMask
-	
+
 	#
 	# erode
 	#bimpy.util.morphology.binary_erosion(currentStack, iterations=2)
@@ -157,10 +158,10 @@ def cellDenRun(path, trimPercent, verbose=False):
 	# edt
 	# edt ? distance from background to hcn4 cells?
 	# edt requires (finalMask AND convex hull)
-	
+
 	"""
 		need a cross channel edt, something like this
-		
+
 		these_hcn1_pixels = stackDict1['mask']==1 # pixels in hcn1 mask
 		_printStackParams('these_hcn1_pixels', these_hcn1_pixels)
 		edtFinal = stackDict2['edt'].copy()
@@ -173,7 +174,7 @@ def cellDenRun(path, trimPercent, verbose=False):
 	#
 	# save
 	#mySave(saveBase, saveBase2, stackDict, tiffHeader, paramDict)
-	
+
 	#
 	# update master cell db
 	#updateMasterCellDB(masterFilePath, filename, paramDict)
@@ -190,25 +191,30 @@ def cellDenRun(path, trimPercent, verbose=False):
 	print('  saving filteredSavePath:', filteredSavePath)
 	bimpy.util.imsave(filteredSavePath, filteredStack, tifHeader=tiffHeader, overwriteExisting=True)
 	'''
-	
+
 	maskSavePath = savePath + '_mask.tif'
 	print('  saving maskSavePath:', maskSavePath)
 	bimpy.util.imsave(maskSavePath, finalMask, tifHeader=tiffHeader, overwriteExisting=True)
 
 	return paramDict
-	
+
 if __name__ == '__main__':
-	
+
 	path = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_0014_ch1.tif'
 	path = '/Users/cudmore/data/testing/20200717__A01_G001_0014a_ch1.tif'
-	trimPercent = 15
-	
+	path = '/home/cudmore/data/nathan/SAN4/SAN4_tail_ch1.tif'
+
+	# for merged (2 x 2) stacks, don't trim
+	#trimPercent = 15
+	trimPercent = None
+
 	paramDict = cellDenRun(path, trimPercent)
-	
+
+	'''
 	print('paramDict:')
 	print(json.dumps(paramDict, indent=4))
-	
+	'''
+
 	doNapari = False
 	if doNapari:
 		aicsOneNapari(path, channels=[1])
-	
