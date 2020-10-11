@@ -157,7 +157,7 @@ if __name__ == '__main__':
 
 
 	# specify the channel
-	channel = 2
+	channel = 1
 	#channel = 2 # does not look so good for CD-31 because of endocardium
 
 	# myMakeGrid is defined above
