@@ -10,10 +10,6 @@ conda activate sanode-env
 
 import aicsUtil2 # does not require bimpy
 
-#
-# change this for each dataset (e.g. each folder of _ch1/_ch2 files)
-#
-
 '''
 Head: 10, 11, 14, 15 (20200901_SAN4_TOP)
 Mid: 57, 58, 63, 64  (20200901_SAN4_TOP)

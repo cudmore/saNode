@@ -36,9 +36,12 @@ def myGetDefaultParamDict():
 	paramDict['fileNameBase'] = ''
 	#paramDict['f3_param'] =[[3, 0.001], [5, 0.001], [7, 0.001]]
 	paramDict['f3_param'] =[[5, 0.001], [8, 0.001]]
-	print('\n\n20200901 on latop changed median kernel\n\n')
+	#print('\n\n20200901 on latop changed median kernel\n\n')
 	#paramDict['medianKernelSize'] = (2,2,2)
-	paramDict['medianKernelSize'] = (2,2,1)
+	medianKernelSize = (2,2,2) # order here is (z, x, y)
+	print('  aicsUtil.myGetDefaultParamDict() medianKernelSize:', medianKernelSize)
+	#print('  is kernel in (x,y,z) order OR (z,x,y) order??? medianKernelSize:', medianKernelSize)
+	paramDict['medianKernelSize'] = medianKernelSize
 	paramDict['removeBelowThisPercent'] = 0.09
 	paramDict['removeSmallerThan'] = 2200 #2000 #600 #500
 
@@ -290,14 +293,17 @@ def setupAnalysis(path, trimPercent = 15, firstSlice=None, lastSlice=None, saveF
 
 	#
 	# load
+	print('    setupAnalysis() loading readVoxelSize:', path)
+	xVoxel, yVoxel, zVoxel = bimpy.util.bTiffFile.readVoxelSize(path)
+
 	print('    setupAnalysis() loading stack:', path)
 	stackData, tiffHeader = bimpy.util.bTiffFile.imread(path)
 	paramDict['tiffHeader'] = tiffHeader
 	_printStackParams('  stackData', stackData)
 
-	paramDict['zVoxel'] = tiffHeader['zVoxel']
-	paramDict['xVoxel'] = tiffHeader['xVoxel']
-	paramDict['yVoxel'] = tiffHeader['yVoxel']
+	paramDict['xVoxel'] = xVoxel #tiffHeader['xVoxel']
+	paramDict['yVoxel'] = yVoxel #tiffHeader['yVoxel']
+	paramDict['zVoxel'] = zVoxel #tiffHeader['zVoxel']
 
 	paramDict['zOrigPixel'] = stackData.shape[0]
 	paramDict['xOrigPixel'] = stackData.shape[1] # rows
@@ -318,8 +324,8 @@ def setupAnalysis(path, trimPercent = 15, firstSlice=None, lastSlice=None, saveF
 		else:
 			print('    WARNING: not trimming lower/right x/y !!!')
 	else:
-		print('aicsUtil.setupAnalysis() is NOT trimming')
-		
+		print('  aicsUtil.setupAnalysis() is NOT trimming')
+
 	#
 	# keep slices
 	# will return None when user has not specified first/last

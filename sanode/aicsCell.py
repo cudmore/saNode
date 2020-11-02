@@ -16,13 +16,21 @@ from aicsUtil import _printStackParams
 from aicsOneNapari import aicsOneNapari
 
 ################################################################################
-def cellDenRun(path, trimPercent, verbose=False):
+def cellDenRun(path, trimPercent=None, verbose=False):
 	print('cellDen.myRun() path:', path)
 
 	filename, paramDict, stackDict = \
 			setupAnalysis(path, trimPercent = trimPercent, \
 			firstSlice=None, lastSlice=None, saveFolder='aicsAnalysis')
 	#filename, paramDict, stackDict = setupAnalysis(path, trimPercent, masterFilePath=masterFilePath)
+
+	# debug x/y/z  voxel
+	#print('cellDenRun got paramDict:')
+	#print(json.dumps(paramDict, indent=4))
+
+	xVoxel = paramDict['xVoxel']
+	yVoxel = paramDict['yVoxel']
+	zVoxel = paramDict['zVoxel']
 
 	if stackDict['raw']['data'] is None:
 		print('=== *** === cellDen.myRun() aborting, got None stack data')
@@ -34,6 +42,9 @@ def cellDenRun(path, trimPercent, verbose=False):
 	# get some local variables
 	stackData = stackDict['raw']['data']
 	tiffHeader = paramDict['tiffHeader']
+
+	#print('cellDenRun() got tiffHeader:', tiffHeader)
+
 	#saveBase = paramDict['saveBase']
 	#saveBase2 = paramDict['saveBase2']
 	savePath = paramDict['saveBase']
@@ -181,9 +192,9 @@ def cellDenRun(path, trimPercent, verbose=False):
 
 	# save raw to conserve memory
 	rawSavePath = savePath + '.tif'
-	print('  saving rawSavePath:', rawSavePath)
+	print(f'  saving raw x/y/z voxel is {xVoxel} {yVoxel} {zVoxel} {rawSavePath}')
 	#bimpy.util.imsave(rawSavePath, stackData, tifHeader=tiffHeader, overwriteExisting=True)
-	bimpy.util.imsave(rawSavePath, stackData, tifHeader=tiffHeader, overwriteExisting=True)
+	bimpy.util.imsave2(rawSavePath, stackData, xVoxel, yVoxel, zVoxel, overwriteExisting=True)
 
 	'''
 	filteredStack
@@ -193,8 +204,9 @@ def cellDenRun(path, trimPercent, verbose=False):
 	'''
 
 	maskSavePath = savePath + '_mask.tif'
-	print('  saving maskSavePath:', maskSavePath)
-	bimpy.util.imsave(maskSavePath, finalMask, tifHeader=tiffHeader, overwriteExisting=True)
+	print(f'  saving mask x/y/z voxel is {xVoxel} {yVoxel} {zVoxel} {maskSavePath}')
+	#bimpy.util.imsave(maskSavePath, finalMask, tifHeader=tiffHeader, overwriteExisting=True)
+	bimpy.util.imsave2(maskSavePath, finalMask, xVoxel, yVoxel, zVoxel, overwriteExisting=True)
 
 	return paramDict
 
@@ -202,7 +214,13 @@ if __name__ == '__main__':
 
 	path = '/Volumes/ThreeRed/nathan/20200717/20200717__A01_G001_0014_ch1.tif'
 	path = '/Users/cudmore/data/testing/20200717__A01_G001_0014a_ch1.tif'
-	path = '/home/cudmore/data/nathan/SAN4/SAN4_tail_ch1.tif'
+
+	#path = '/home/cudmore/data/nathan/SAN4/SAN4_tail_ch1.tif'
+	path = '/media/cudmore/data/san-density/SAN4/SAN4_head_ch1.tif'
+	path = '/media/cudmore/data/san-density/SAN4/SAN4_mid_ch1.tif'
+	path = '/media/cudmore/data/san-density/SAN4/SAN4_tail_ch1.tif'
+
+	path = '/media/cudmore/data/san-density/SAN3/SAN3_tail/SAN3_tail_ch1.tif'
 
 	# for merged (2 x 2) stacks, don't trim
 	#trimPercent = 15

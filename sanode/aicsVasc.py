@@ -63,6 +63,10 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 		return False
 	'''
 
+	xVoxel = paramDict['xVoxel']
+	yVoxel = paramDict['yVoxel']
+	zVoxel = paramDict['zVoxel']
+
 	#
 	# parameters
 	f3_param = paramDict['f3_param']
@@ -106,7 +110,8 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 	rawSavePath = savePath + '.tif'
 	print('  saving rawSavePath:', rawSavePath)
 	#bimpy.util.imsave(rawSavePath, stackData, tifHeader=tiffHeader, overwriteExisting=True)
-	bimpy.util.imsave(rawSavePath, stackData, tifHeader=tiffHeader, overwriteExisting=True)
+	#bimpy.util.imsave(rawSavePath, stackData, tifHeader=tiffHeader, overwriteExisting=True)
+	bimpy.util.imsave2(rawSavePath, stackData, xVoxel, yVoxel, zVoxel, overwriteExisting=True)
 
 	#_printStackParams('loaded stackData', stackData)
 
@@ -254,18 +259,21 @@ def vascDenRun(path, trimPercent=15, firstSlice=None, lastSlice=None, saveFolder
 	'''
 
 	labeledSavePath = savePath + '_labeled.tif'
-	print('  saving labeledSavePath:', labeledSavePath)
-	bimpy.util.imsave(labeledSavePath, labeledDataWithout, tifHeader=tiffHeader, overwriteExisting=True)
+	print(f'  saving labeled x/y/z voxel is {xVoxel} {yVoxel} {zVoxel} {labeledSavePath}')
+	#bimpy.util.imsave(labeledSavePath, labeledDataWithout, tifHeader=tiffHeader, overwriteExisting=True)
+	bimpy.util.imsave2(labeledSavePath, labeledDataWithout, xVoxel, yVoxel, zVoxel, overwriteExisting=True)
 
 	removedLabelsSavePath = savePath + '_labeled_removed.tif'
-	print('  saving removedLabelsSavePath:', removedLabelsSavePath)
-	bimpy.util.imsave(removedLabelsSavePath, labeledDataRemoved, tifHeader=tiffHeader, overwriteExisting=True)
+	print(f'  saving removed labeled x/y/z voxel is {xVoxel} {yVoxel} {zVoxel} {removedLabelsSavePath}')
+	#bimpy.util.imsave(removedLabelsSavePath, labeledDataRemoved, tifHeader=tiffHeader, overwriteExisting=True)
+	bimpy.util.imsave2(removedLabelsSavePath, labeledDataRemoved, xVoxel, yVoxel, zVoxel, overwriteExisting=True)
 
 	maskSavePath = savePath + '_mask.tif'
-	print('  saving maskSavePath:', maskSavePath)
+	print(f'  saving mask x/y/z voxel is {xVoxel} {yVoxel} {zVoxel} {maskSavePath}')
 	# ValueError: ImageJ does not support data type ?
 	# maskStack = maskStack.astype(np.bool_)
-	bimpy.util.imsave(maskSavePath, maskStack, tifHeader=tiffHeader, overwriteExisting=True)
+	#bimpy.util.imsave(maskSavePath, maskStack, tifHeader=tiffHeader, overwriteExisting=True)
+	bimpy.util.imsave2(maskSavePath, maskStack, xVoxel, yVoxel, zVoxel, overwriteExisting=True)
 
 
 	# free memory
@@ -316,6 +324,8 @@ if __name__ == '__main__':
 		#path = '/home/cudmore/data/nathan/SAN4/SAN4_head_ch2.tif'
 		#path = '/home/cudmore/data/nathan/SAN4/SAN4_mid_ch2.tif'
 		path = '/home/cudmore/data/nathan/SAN4/SAN4_tail_ch2.tif'
+
+		path = '/media/cudmore/data/san-density/SAN3/SAN3_tail/SAN3_tail_ch2.tif'
 
 		trimPercent = None # for the small subset, we don't trim it
 

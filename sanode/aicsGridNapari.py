@@ -21,6 +21,7 @@ import tifffile
 import napari
 
 import aicsUtil2 # does not import bimpy
+import bTiffFile # taken from bimpy.util.bTiffFile
 
 ############################################################
 def getSnakeGrid(gridShape):
@@ -42,6 +43,7 @@ def getSnakeGrid(gridShape):
 	integerGrid[1::2] = tmpIntegerGrid[1::2,::-1]
 
 	return integerGrid
+
 
 ############################################################
 def myFileRead0(filePath, commonShape, dtype=np.uint8, trimPercent=None, uFirstSlice=None, uLastSlice=None):
@@ -180,6 +182,8 @@ def myGetBlock(aicsGridParam, channel, finalPostfixStr, getAll=False, smallDict=
 	todo: pass final dtype to load based on finalPostfixStr ('', '_mask', '_labeled', etc)
 	"""
 
+	print('aicsGridNapari.myGetBlock() channel:', channel)
+
 	dataPath = aicsGridParam['dataPath'] # used to save subset with smallDict
 	masterFilePath = aicsGridParam['masterFilePath']
 	gridShape = aicsGridParam['gridShape']
@@ -206,7 +210,7 @@ def myGetBlock(aicsGridParam, channel, finalPostfixStr, getAll=False, smallDict=
 	elif channel == 3:
 		postfixStr = '_ch3' + finalPostfixStr + '.tif'
 	else:
-		print('error: myGetBlock() got bad channel:', channel)
+		print('  error: myGetBlock() got bad channel:', channel)
 
 	'''
 	# make a list of file names following order of snake pattern in integerGrid
@@ -307,6 +311,8 @@ def myGetBlock(aicsGridParam, channel, finalPostfixStr, getAll=False, smallDict=
 					uFirstSlice = None
 					uLAstSLice = None
 
+				# todo: get voxel x/y/z on read
+				xVoxel, yVoxel, zVoxel = bTiffFile.readVoxelSize(file) # use this on save
 				oneBigData = myFileRead0(file, commonShape, dtype=big_dtype, trimPercent=trimPercent, uFirstSlice=uFirstSlice, uLastSlice=uLastSlice)
 
 				try:
@@ -338,27 +344,43 @@ def myGetBlock(aicsGridParam, channel, finalPostfixStr, getAll=False, smallDict=
 
 	# save small
 	if smallDict is not None:
-		smallPath = os.path.join(dataPath, smallDict['saveName'])
+		if not 'mainFolder' in smallDict.keys():
+			print('\nERROR: you must specify "mainFolder" in your small dict !!!!!!\n')
+			return None
+
+		smallMainFolder = smallDict['mainFolder'] # folder to put all results in
+		smallSaveName = smallDict['saveName']
+
+		# main folder like SAN4, SAN3, ...
+		smallPath = os.path.join(dataPath, smallMainFolder) # new folder is 'smallMainFolder'
 		if not os.path.isdir(smallPath):
-			print('making output folder:', smallPath)
+			print('  making output folder:', smallPath)
+			os.mkdir(smallPath)
+
+		# second folder like SAN4_head, SAN4_mid, SAN4_tail, ...
+		smallPath = os.path.join(smallPath, smallSaveName) # new folder is 'smallSaveName'
+		if not os.path.isdir(smallPath):
+			print('  making output folder:', smallPath)
 			os.mkdir(smallPath)
 
 		# save big to tiff for import of bigData into bImPy
 		bigFile = smallDict['saveName'] + '_BIG_' + '_ch' + str(channel) + '.tif'
 		bigPath = os.path.join(smallPath, bigFile)
 		if os.path.isfile(bigPath):
-			print('ERROR: you need to remove file and run again, bigPath:', bigPath)
+			print('\n  ERROR: did not save big, you need to remove file and run again, bigPath:', bigPath, '\n')
 		else:
 			print('  saving bigPath:', bigPath)
-			tifffile.imsave(bigPath, bigStack)
+			#tifffile.imsave(bigPath, bigStack)
+			bTiffFile.imsave(bigPath, bigStack, xVoxel, yVoxel, zVoxel, overwriteExisting=False)
 
 		smallFile = smallDict['saveName'] + '_ch' + str(channel) + '.tif'
 		smallPath = os.path.join(smallPath, smallFile)
 		if os.path.isfile(smallPath):
-			print('ERROR: you need to remove file and run again, smallPath:', smallPath)
+			print('\n  ERROR: did not save small, you need to remove file and run again, smallPath:', smallPath, '\n')
 		else:
 			print('  saving smallPath:', smallPath)
-			tifffile.imsave(smallPath, smallStack)
+			#tifffile.imsave(smallPath, smallStack)
+			bTiffFile.imsave(smallPath, smallStack, xVoxel, yVoxel, zVoxel, overwriteExisting=False)
 
 	return bigStack
 
