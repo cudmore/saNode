@@ -25,5 +25,6 @@ setup(
         'napari',
         'pyqt5',
         'tifffile',
+		'matplotlib',
     ]
 )

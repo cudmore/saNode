@@ -1,3 +1,4 @@
 pandas
 napari
 skan
+matplotlib
