@@ -118,6 +118,7 @@ def aicsMyocyteDistToVasc(path, verbose=False):
 	thresholdDict['std'] = float(np.nanstd(thresholdDistances))
 	sem = float(np.nanstd(thresholdDistances)) / math.sqrt(numberOfNonNan)
 	thresholdDict['sem'] = sem
+	thresholdDict['median'] = float(np.nanmedian(thresholdDistances))
 
 	# can't create a pd dataframe with a key as a list?
 	#thresholdDict['rawDist'] = thresholdDistances.tolist()
@@ -157,7 +158,7 @@ if __name__ == '__main__':
 		pathList = [
 			'/media/cudmore/data/san-density/SAN1/SAN1_head/aicsAnalysis/SAN1_head_ch2.tif',
 			'/media/cudmore/data/san-density/SAN1/SAN1_mid/aicsAnalysis/SAN1_mid_ch2.tif',
-			#'/media/cudmore/data/san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif',
+			'/media/cudmore/data/san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif',
 		]
 		# san2
 		pathList += [

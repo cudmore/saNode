@@ -106,6 +106,8 @@ if __name__ == '__main__':
 
 	path = '/media/cudmore/data/san-density/SAN3/SAN3_head/aicsAnalysis/SAN3_head_ch1.tif'
 	path = '/media/cudmore/data/san-density/SAN3/SAN3_head/aicsAnalysis/SAN3_head_ch2.tif'
+	
+	path = '/media/cudmore/data/san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif'
 
 	(maskStart, maskStop) = aicsBlankSlices.getTopBottom(path)
 

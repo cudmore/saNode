@@ -12,10 +12,12 @@ plot
 	- histograms of slab diameter
 """
 
-import os
+import os, math, random
 
 import numpy as np
 import pandas as pd
+
+import scipy.stats
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -48,20 +50,28 @@ def defaultPlotLayout():
 	mpl.rcParams['xtick.labelsize']=fontSize
 	mpl.rcParams['ytick.labelsize']=fontSize
 
-def printStats(dataList):
+def printStats(dataList, verbose=True):
 	theMin = round(np.nanmin(dataList),2)
 	theMax = round(np.nanmax(dataList),2)
 	theMean = round(np.nanmean(dataList),2)
 	theSD = round(np.nanstd(dataList),2)
 	theNum = np.count_nonzero(~np.isnan(dataList))
-	print(f'  mean:{theMean} sd:{theSD} n:{theNum} min:{theMin} max:{theMax}')
+	theSEM = round(theSD / math.sqrt(theNum),2)
+	theMedian = round(np.nanmedian(dataList),2)
 
-def plotEdgeDiamHist(pathList, minNumberOfSlabs=5):
+	if verbose:
+		print(f'mean:{theMean:0.2f} sd:{theSD:0.2f} n:{theNum} min:{theMin:0.2f} max:{theMax:0.2f} median:{theMedian:0.2f}')
+
+	return theMean, theSD, theSEM, theMedian, theNum
+
+def plotEdgeDiamHist(pathList, doPlot=True, minNumberOfSlabs=5):
 	"""
 	each edge contributes to the hist (not each slab)
 	"""
 
 	print('plotEdgeDiamHist():')
+
+	numPath = len(pathList)
 
 	meanEdgeDiamList = [] # mean diameter of each edge
 	numSlabList = [] # number of slabs in each edge
@@ -103,6 +113,17 @@ def plotEdgeDiamHist(pathList, minNumberOfSlabs=5):
 			xData = [xData[tmpIdx] for tmpIdx,x in enumerate(numSlabs) if x > minNumberOfSlabs]
 			numSlabs = [x for x in numSlabs if x > minNumberOfSlabs]
 
+		# random sample to make histograms the same n
+		if idx==0:
+			# random sample a subset of head (to match tail)
+			numInHead = len(xData)
+			numInTail = 217
+			tmpRange = range(numInHead)
+			rndIdx = random.sample(tmpRange, numInTail)
+			print('taking random sample for idx 0, n=', numInTail)
+			xData = [xData[tmpIdx] for tmpIdx in rndIdx]
+			numSlabs = [numSlabs[tmpIdx] for tmpIdx in rndIdx]
+
 		# keep track of x-axis
 		xMin = np.nanmin(xData)
 		xMax = np.nanmax(xData)
@@ -116,76 +137,95 @@ def plotEdgeDiamHist(pathList, minNumberOfSlabs=5):
 	#
 	# print stats
 	print('  minNumberOfSlabs:', minNumberOfSlabs)
+	meanList = []
+	sdList = []
+	nList = []
+	medianList = []
 	for idx, path in enumerate(pathList):
 		theDiameters = meanEdgeDiamList[idx] # pixels
 		print(f'{idx+1} path:{path}')
 		print(f'  x/y/z voxel size:{voxelSizeList[idx]}')
-		printStats(theDiameters)
+		theMean, theSD, theSEM, theMedian, theN = printStats(theDiameters)
+		meanList.append(theMean)
+		sdList.append(theSD)
+		medianList.append(theMedian)
+		nList.append(theN)
 
-	# set up plot
-	defaultPlotLayout()
-	fig,axs = plt.subplots(3, 1, figsize=(6,5)) # need constrained_layout=True to see axes titles
-	cumFig, cumAxis = plt.subplots(1,1)
-	nSlabsFig, nSlabsAxis = plt.subplots(3, 1, figsize=(6,5))
+	if doPlot:
+		# set up plot
+		defaultPlotLayout()
+		fig,axs = plt.subplots(numPath, 1, figsize=(4,4)) # need constrained_layout=True to see axes titles
+		cumFig, cumAxis = plt.subplots(1,1)
+		nSlabsFig, nSlabsAxis = plt.subplots(3, 1, figsize=(4,4))
 
-	# plot a number of hist
-	bins = [(x+1)*(xVoxel) for x in range(30)]
-	#bins = 'auto'
+		# plot a number of hist
+		bins = [(x+1)*(xVoxel) for x in range(30)]
+		#bins = 'auto'
 
-	colorList = ['r', 'g', 'b']
+		colorList = ['r', 'g', 'b']
+		colorList = ['k', '0.5', '0.5']
+		# plot
+		for idx, path in enumerate(pathList):
+			tmpPath, tmpFile = os.path.split(path) # for title/legend
+			tmpFile = tmpFile.replace('_ch2.tif', '')
+			tmpFile = tmpFile.replace('_', ' ')
+			color = colorList[idx]
 
-	# plot
-	for idx, path in enumerate(pathList):
-		tmpPath, tmpFile = os.path.split(path) # for title/legend
-		tmpFile = tmpFile.replace('_ch2.tif', '')
-		tmpFile = tmpFile.replace('_', ' ')
-		color = colorList[idx]
+			theDiameters = meanEdgeDiamList[idx] # pixels
+			theNumberOfSlabs = numSlabList[idx] # pixels
 
-		theDiameters = meanEdgeDiamList[idx] # pixels
-		theNumberOfSlabs = numSlabList[idx] # pixels
+			# plot hist
+			theMean = round(np.nanmean(theDiameters),2)
+			theSD = round(np.nanstd(theDiameters),2)
+			theNum = np.count_nonzero(~np.isnan(theDiameters))
+			label = f'{tmpFile}\n$\mu$={theMean} $\sigma$={theSD} n={theNum}'
 
-		# plot hist
-		theMean = round(np.nanmean(theDiameters),2)
-		theSD = round(np.nanstd(theDiameters),2)
-		theNum = np.count_nonzero(~np.isnan(theDiameters))
-		label = f'{tmpFile}\n$\mu$={theMean} $\sigma$={theSD} n={theNum}'
+			edgeColor = 'k'
+			if color == 'k':
+				edgeColor = '0.5'
+			axs[idx].hist(theDiameters, bins=bins, color=color,
+							histtype='bar', edgecolor=edgeColor, label=label,
+							density=True)
 
-		axs[idx].hist(theDiameters, bins=bins, color=color,
-						histtype='bar', edgecolor='k', label=label,
-						density=True)
+			# add a legend
+			axs[idx].legend(frameon=False, handlelength=0, handletextpad=-20)
+			lastIdx = 1 #2 # allows us to plot head/mid/tail or just head/mid
+			if idx==lastIdx:
+				pass
+			else:
+				axs[idx].set_xticklabels([])
+			if idx == lastIdx:
+				axs[idx].set_xlabel('Vessel Segment Diameter ($\mu$m)')
+			if idx == 1:
+				axs[idx].set_ylabel('Probability')
+			axs[idx].set_xlim(xAxisMin, xAxisMax) # um
 
-		# add a legend
-		axs[idx].legend(frameon=False, handlelength=0, handletextpad=-20)
-		if idx==2:
-			pass
-		else:
-			axs[idx].set_xticklabels([])
-		if idx == 2:
-			axs[idx].set_xlabel('Vessel Segment Diameter ($\mu$m)')
-		if idx == 1:
-			axs[idx].set_ylabel('Probability')
-		axs[idx].set_xlim(xAxisMin, xAxisMax) # um
+			print('setting hist y-axis to [0,0.42] for san3')
+			axs[idx].set_ylim(0, 0.5) # um
 
-		# plot cumulative
-		n, bins, patches = cumAxis.hist(theDiameters, histtype='step',
-							bins=bins, color=color, cumulative=True, density=True, linewidth=2)
-		cumAxis.set_xlim(xAxisMin, xAxisMax) # um
-		cumAxis.set_xlabel('Vessel Segment Diameter ($\mu$m)')
-		cumAxis.set_ylabel('Probability')
+			# plot cumulative
+			n, bins, patches = cumAxis.hist(theDiameters, histtype='step',
+								bins=bins, color=color, cumulative=True, density=True, linewidth=2)
+			cumAxis.set_xlim(xAxisMin, xAxisMax) # um
+			cumAxis.set_xlabel('Vessel Segment Diameter ($\mu$m)')
+			cumAxis.set_ylabel('Probability')
 
-		# plot nSlabs versus diam
-		nSlabsAxis[idx].scatter(theDiameters, theNumberOfSlabs, marker='o', color=color)
-		if idx==2:
-			pass
-		else:
-			nSlabsAxis[idx].set_xticklabels([])
-		if idx == 2:
-			nSlabsAxis[idx].set_xlabel('Vessel Segment Diameter ($\mu$m)')
-		if idx == 1:
-			nSlabsAxis[idx].set_ylabel('Number of Slabs')
-		nSlabsAxis[idx].set_xlim(xAxisMin, xAxisMax) # um
+			# plot nSlabs versus diam
+			nSlabsAxis[idx].scatter(theDiameters, theNumberOfSlabs, marker='o', color=color)
+			if idx==2:
+				pass
+			else:
+				nSlabsAxis[idx].set_xticklabels([])
+			if idx == 2:
+				nSlabsAxis[idx].set_xlabel('Vessel Segment Diameter ($\mu$m)')
+			if idx == 1:
+				nSlabsAxis[idx].set_ylabel('Number of Slabs')
+			nSlabsAxis[idx].set_xlim(xAxisMin, xAxisMax) # um
 
-	plt.show()
+		plt.show()
+	#
+	# end
+	return meanList, sdList, medianList, nList
 
 def plotSlabDiamHist(pathList):
 	"""
@@ -302,19 +342,21 @@ def plotSlabDiamHist(pathList):
 	#
 	plt.show()
 
-def plot_hcn4_dist_hist(pathList):
+def plot_hcn4_dist_hist(pathList, doPlot=True, keepAboveDist=0.2):
 	"""
 	Plot distribution of distance from each hcn4 mask pixel to nearest vasculature
 
 	params:
 		path: full path to _ch2.tif
-
+		keepAboveDist: um distances to keep are > keepAboveDist
 	plot head/mid/tail
 	"""
 
-	# set up plot
-	defaultPlotLayout()
-	fig,axs = plt.subplots(3, 1, figsize=(7,3)) # need constrained_layout=True to see axes titles
+	xAxisMin = 1e6
+	#xAxisMax = -1e6
+	xAxisMax = 1e6 # confusing
+
+	goodDistancesList = []
 
 	# calculate
 	for idx, path in enumerate(pathList):
@@ -323,26 +365,138 @@ def plot_hcn4_dist_hist(pathList):
 
 		# make a histogram of thresholdDistances (includes nan)
 
-		print('  before removing nan:', thresholdDistances.shape)
+		#print('  before removing nan:', thresholdDistances.shape)
 
 		numberOfNonNan = np.count_nonzero(~np.isnan(thresholdDistances))
-		print('  numberOfNonNan:', numberOfNonNan)
+		#print('  numberOfNonNan:', numberOfNonNan)
 
 		# remove nan
 		goodDistances = thresholdDistances[~np.isnan(thresholdDistances)]
-		print('  after removing nan:', goodDistances.shape)
+		#print('  after removing nan:', goodDistances.shape)
 
+		if keepAboveDist is not None:
+			goodDistances = goodDistances[goodDistances>keepAboveDist]
 
-		numBins = 100
-		axs[idx].hist(goodDistances, bins=numBins)
+		# 20201106, this is wierd but will allow me to take
+		# avg cum hist across 1/2/3/4 in superioer/mid/inferior
+		keepBelowDistances = 24
+		if keepBelowDistances is not None:
+			goodDistances = goodDistances[goodDistances<keepBelowDistances]
 
-		plt.xlabel('HCN4 distance to vasculature ($\mu$m)')
-		plt.ylabel('Count')
+		# keep track of x-axis
+		xMin = np.nanmin(goodDistances)
+		xMax = np.nanmax(goodDistances)
+		if xMin<xAxisMin: xAxisMin = xMin
+		#if xMax>xAxisMax: xAxisMax = xMax # max should be smalled xMax???
+		if xMax<xAxisMax: xAxisMax = xMax # max should be smalled xMax???
+
+		# append
+		goodDistancesList.append(goodDistances)
+
+	# stats
+	if 1:
+		for tmpList in goodDistancesList:
+			printStats(tmpList)
+
+		# Tests whether the distributions of two independent samples are equal or not.
+		# Observations in each sample are independent and identically distributed (iid).
+		# Observations in each sample can be ranked.
+		#
+		# 0 - 1
+		'''
+		stat, p01 = scipy.stats.mannwhitneyu(stat0, stat1)
+		# 1 - 2
+		stat, p12 = scipy.stats.mannwhitneyu(stat1, stat2)
+		# 0 - 2
+		'''
+		# this works
+		if 0:
+			stat, p02 = scipy.stats.mannwhitneyu(stat0, stat2)
+			print('mannwhitneyu p02:', p02)
+		#print(f'  p01:{p01}, p12:{p12}, p02:{p02}')
+		#
+		'''
+		# The Wilcoxon signed-rank test tests the null hypothesis that two related paired samples come from the same distribution.
+		# 0 - 1
+		stat, p01 = scipy.stats.wilcoxon(stat0, stat1)
+		# 1 - 2
+		stat, p12 = scipy.stats.wilcoxon(stat1, stat2)
+		# 0 - 2
+		print('wilcoxon')
+		stat, p02 = scipy.stats.wilcoxon(stat0, stat2)
+		print(f'  p01:{p01}, p12:{p12}, p02:{p02}')
+		'''
+
+	#
+	# plot
+	if doPlot:
+		# set up plot
+		defaultPlotLayout()
+		fig,axs = plt.subplots(3, 1, figsize=(7,5)) # need constrained_layout=True to see axes titles
+		cumFig, cumAxis = plt.subplots(1,1, figsize=(4,4))
+
+		colorList = ['r', 'g', 'b']
+
+		# plot
+		for idx, path in enumerate(pathList):
+			tmpPath, tmpFile = os.path.split(path) # for title/legend
+			tmpFile = tmpFile.replace('_ch2.tif', '')
+			tmpFile = tmpFile.replace('_', ' ')
+			color = colorList[idx]
+
+			goodDistances = goodDistancesList[idx]
+
+			# plot hist
+			theMin = np.nanmin(goodDistances)
+			theMax = np.nanmax(goodDistances)
+			theMean = round(np.nanmean(goodDistances),2)
+			theSD = round(np.nanstd(goodDistances),2)
+			theNum = np.count_nonzero(~np.isnan(goodDistances))
+			label = f'{tmpFile}\n$\mu$={theMean:.2f} $\sigma$={theSD:.2f} n={theNum}'
+
+			# had to turn off edgecolor='k' because some were showing up as black (e.g. 'k')
+			bins = 200 #'auto'
+			axs[idx].hist(goodDistances, bins=bins, color=color,
+							#histtype='bar', edgecolor='k', label=label,
+							histtype='bar', label=label,
+							density=True,
+							log=True)
+
+			#axs[idx].set_xlim(xAxisMin, xAxisMax) # um
+			axs[idx].set_xlim(0, xAxisMax) # um
+
+			axs[idx].legend(frameon=False, handlelength=0, handletextpad=-20)
+			if idx==2:
+				pass
+			else:
+				pass
+				#axs[idx].set_xticklabels([])
+			if idx == 2:
+				axs[idx].set_xlabel('HCN4 distance to vasculature ($\mu$m)')
+			if idx == 1:
+				axs[idx].set_ylabel('Probability')
+
+			# plot cumulative
+			#hist,bins = np.histogram(goodDistances,bins=bins)
+			if idx==0:
+				color = 'k'
+			elif idx==1:
+				color = '0.5' # gray
+			n, bins, patches = cumAxis.hist(goodDistances, bins=bins,
+						histtype='step', color=color, linewidth=2,
+						cumulative=True, density=True,
+						range=[theMin,theMax])
+			#cumAxis.set_xlim(xAxisMin, xAxisMax) # um
+			cumAxis.set_xlim(0, xAxisMax) # um
+			cumAxis.set_xlabel('HCN4 distance to vasculature ($\mu$m)')
+			cumAxis.set_ylabel('Probability')
 
 	#
 	plt.show()
 
-def plotMaskDensity(channel=2, csvFile=None):
+	return goodDistancesList
+
+def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 	"""
 	plot the percent of a mask occupying a valume
 
@@ -356,30 +510,86 @@ def plotMaskDensity(channel=2, csvFile=None):
 	if csvFile is None:
 		csvFile = f'../Density-Result-ch{channel}.csv'
 	df = pd.read_csv(csvFile)
+	#print(df)
 
 	sanList = ['SAN1', 'SAN2', 'SAN3', 'SAN4']
-	hmtList = ['head', 'mid', 'tail']
-	hmtList = ['head', 'tail']
+	sanMarkers = ['o', '^', 's', 'd']
+	regionList = ['head', 'mid', 'tail']
+	regionList = ['head', 'tail']
 
 	# column to pull plot values form
 	statCol = 'vMaskPercent'
 
+	#regionListData = [] # not working
+	#regionListData = [[]] * len(regionList) # too complicated
+	superiorList = []
+	inferiorList = []
 	dataList = []
-	for sanStr in sanList:
+	for sanIdx, sanStr in enumerate(sanList):
 		# & has higher precident than ==
 		#oneList = df[ (df['SAN']==sanStr) ]['mean'].tolist()
-		oneList = df[ (df['SAN']==sanStr) & df['headMidTail'].isin(hmtList) ][statCol].tolist()
+		oneSeries = df[ (df['SAN']==sanStr) & df['headMidTail'].isin(regionList) ][statCol]
+		oneList = oneSeries.tolist()
 		dataList.append(oneList)
-		print(sanStr, oneList)
+		superiorList.append(oneList[0])
+		inferiorList.append(oneList[1])
+		# this is getting complicated, loosing track
+		# THIS IS NOT WORKING !!!!!!!!!!!!!!
+		'''
+		for regionIdx, region in enumerate(regionList):
+			# todo: this needs to be 2d list
+			regionListData[regionIdx].append(oneList[regionIdx])
+		'''
+		print('  ', sanStr, oneList)
+
+	print('  superiorList:', superiorList)
+	print('  inferiorList:', inferiorList)
+	#print(regionListData)
 
 	colorChars = ['r', 'g', 'b', 'y'] # one color for each of SAN1, SAN2, ...
 
 	fig,ax = plt.subplots(1) # need constrained_layout=True to see axes titles
 	for idx, data in enumerate(dataList):
 		colorChar = colorChars[idx]
-		#ax.plot(hmtList, data, colorChar)
-		ax.plot(data,
-				color=colorChar)
+		marker = sanMarkers[idx]
+		#ax.plot(regionList, data, colorChar)
+		ax.plot(data, color=colorChar,
+				linewidth=1, markersize=4, marker=marker)
+
+	# set x-axis tick marks to region as a category
+	# how do I do this with ax. instead of global plt. ?
+	# does not work
+	#ax.set_xticklabels(regionList)
+	plt.xticks([0,1], regionList)
+	#ax.set_xticks(regionList)
+
+	if plotMean:
+		# this is for (Superior, inferior)
+		if 1:
+			sMean, sSD, sSEM, sMedian, sN = printStats(superiorList, verbose=False)
+			iMean, iSD, iSEM, iMedian, iN = printStats(inferiorList, verbose=False)
+			xMeanPlot = [-0.1, 1.1]
+			ax.errorbar(xMeanPlot, [sMean, iMean], yerr=[sSEM, iSEM],
+						color='k', linewidth=3, markersize=8, marker='s')
+
+		# v2 this follows regions
+		# THIS IS NOT WORKING !!!!!!!!!!!!!!
+		if 0:
+			xRegionPlot = []
+			yRegionMean = []
+			yRegionSEM = []
+			#for thisRegionData in regionListData:
+			for sanIdx, sanStr in enumerate(sanList):
+				for regionIdx, region in enumerate(regionList):
+					thisRegionData = regionListData[sanIdx]
+					print('san:', sanStr, 'region:', region, 'thisRegionData:', thisRegionData)
+					regionMean, regionSD, regionSEM, regionMedian, regionN = \
+										printStats(thisRegionData, verbose=False)
+					xRegionPlot.append(regionIdx - 0.1)
+					yRegionMean.append(regionMean)
+					yRegionSEM.append(regionSEM)
+			ax.errorbar(xRegionPlot, yRegionMean, yerr=yRegionSEM,
+						color='0.4', linewidth=3, markersize=8, marker='s')
 
 	plt.xlabel('')
 	if channel==1:
@@ -389,15 +599,21 @@ def plotMaskDensity(channel=2, csvFile=None):
 	plt.ylabel(f'{yLabelStr} ($\mu$m^3)')
 
 	# set the number of ticks
-	numOnXAxis = len(hmtList)
+	numOnXAxis = len(regionList)
 	plt.locator_params(axis='x', nbins=numOnXAxis)
 
 	#
-	#plt.show()
+	plt.show()
 
-def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv'):
+	# each list is for san1/2/3/4
+	return superiorList, inferiorList
+
+def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='mean'):
 	"""
 	plot mean dist of hcn4 to nearest vasculature
+
+	params:
+		statCol: ('mean', 'median')
 
 	todo:	add sd/se to .csv file
 			add a histogram plot
@@ -417,13 +633,17 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv'):
 	hmtList = ['head', 'tail']
 
 	# column to pull plot values form
-	statCol = 'mean'
+	#statCol = 'mean'
 	dataList = []
+	superiorList = []
+	inferiorList = []
 	for sanStr in sanList:
 		# & has higher precident than ==
 		#oneList = df[ (df['SAN']==sanStr) ]['mean'].tolist()
 		oneList = df[ (df['SAN']==sanStr) & df['headMidTail'].isin(hmtList) ][statCol].tolist()
 		dataList.append(oneList)
+		superiorList.append(oneList[0])
+		inferiorList.append(oneList[1])
 		print(sanStr, oneList)
 
 	colorChars = ['r', 'g', 'b', 'y'] # one color for each of SAN1, SAN2, ...
@@ -434,8 +654,9 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv'):
 		#ax.plot(hmtList, data, colorChar)
 		ax.plot(data, color=colorChar)
 
+	yLabel = statCol[0].upper() + statCol[1:]
 	plt.xlabel('')
-	plt.ylabel('Mean Distance from HCN4 pixels\nto vasculature ($\mu$m)')
+	plt.ylabel(f'{yLabel} Distance from HCN4 pixels\nto vasculature ($\mu$m)')
 
 	# set the number of ticks
 	numOnXAxis = len(hmtList)
@@ -444,6 +665,8 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv'):
 	#
 	plt.show()
 
+	return superiorList, inferiorList
+
 if __name__ == '__main__':
 
 	# this works, plot the mean dist of hcn4 pixels to nearest vasulature
@@ -451,8 +674,8 @@ if __name__ == '__main__':
 		plotMeanDist()
 
 	# plot the density of a ch1/ch2 mask in % um^3
-	if 0:
-		channel = 1
+	if 1:
+		channel = 2
 		plotMaskDensity(channel)
 
 	if 0:
@@ -490,7 +713,7 @@ if __name__ == '__main__':
 
 		plot_hcn4_dist_hist(pathList)
 
-	if 1:
+	if 0:
 		pathList = []
 
 		# SAN2
@@ -520,5 +743,7 @@ if __name__ == '__main__':
 		if 0:
 			plotSlabDiamHist(pathList)
 		# plot mDiam of each edge
-		if 1:
+		if 0:
 			plotEdgeDiamHist(pathList)
+		if 1:
+			plot_hcn4_dist_hist(pathList)

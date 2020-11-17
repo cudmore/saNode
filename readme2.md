@@ -44,8 +44,13 @@ Use this to
 	1) in bMakeDistanceMap.py, set upper/lower slices of edt to np.nan
 	2) in bimpy/analysis/bMakeSkelFromMask.py,
 
-2.2) once we have a mask, we can always get pixels in mask
+2.2) Once we have a mask, we can always get voxel volume in mask
 
+Use this to generate saNode/Density-Result-ch{channel}.csv
+
+Be sure to specify list of files and channel in aicsMaskDen.py
+
+One row per file in SAN 1/2/3/4, h/m/d
 ```
 python aicsMaskDen.py
 ```
@@ -93,6 +98,7 @@ python aicsDistMapBatch.py
 Use
 
 ```
+# this creates/appends to sanNode/hcn4-Distance-Result.csv
 python aicsMyocyteDistToVasc.py
 ```
 

@@ -28,12 +28,10 @@ aicsBlankSlicesDict[keyStr] = {}
 aicsBlankSlicesDict[keyStr]['top'] = 39
 aicsBlankSlicesDict[keyStr]['bottom'] = 66
 # tail
-'''
 keyStr = 'SAN1_tail'
 aicsBlankSlicesDict[keyStr] = {}
-aicsBlankSlicesDict[keyStr]['top'] = 26
-aicsBlankSlicesDict[keyStr]['bottom'] = 44
-'''
+aicsBlankSlicesDict[keyStr]['top'] = 32
+aicsBlankSlicesDict[keyStr]['bottom'] = 56
 
 #
 # san2

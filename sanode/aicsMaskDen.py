@@ -143,7 +143,7 @@ if __name__ == '__main__':
 		pathList = [
 			f'/media/cudmore/data/san-density/SAN1/SAN1_head/aicsAnalysis/SAN1_head_ch{channel}.tif',
 			f'/media/cudmore/data/san-density/SAN1/SAN1_mid/aicsAnalysis/SAN1_mid_ch{channel}.tif',
-			#f'/media/cudmore/data/san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif',
+			f'/media/cudmore/data/san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif',
 		]
 		# san2
 		pathList += [

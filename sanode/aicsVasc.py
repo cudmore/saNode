@@ -326,6 +326,7 @@ if __name__ == '__main__':
 		path = '/home/cudmore/data/nathan/SAN4/SAN4_tail_ch2.tif'
 
 		path = '/media/cudmore/data/san-density/SAN3/SAN3_tail/SAN3_tail_ch2.tif'
+		path = '/media/cudmore/data/san-density/SAN1/SAN1_tail/SAN1_tail_ch2.tif'
 
 		trimPercent = None # for the small subset, we don't trim it
 

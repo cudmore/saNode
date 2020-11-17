@@ -58,7 +58,7 @@ aicsUtil2.rawDataDriver(folderStr, dateStr, gridShape, gDataPath=gDataPath, smal
 '''
 
 # tail
-# file numbers
+# file numbers 31, 32, 41, 42
 folderStr = '20200720'
 dateStr = '20200720'
 gridShape = (8,6)
@@ -68,7 +68,8 @@ smallDict = {
 	'saveName': 'SAN1_tail',
 	'nRows': 2,
 	'nCols': 2,
-	'rowColIdxList': [
+	'rowColIdxList': [(5,4), (5,5),
+					(6,4), (6,5)
 				]
 }
 

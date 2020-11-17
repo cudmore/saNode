@@ -18,9 +18,9 @@ if  __name__ == '__main__':
 
 	# san1
 	pathList = [
-		'/media/cudmore/data/san-density/SAN1/SAN1_head/SAN1_head_ch2.tif',
-		'/media/cudmore/data/san-density/SAN1/SAN1_mid/SAN1_mid_ch2.tif',
-		#'/media/cudmore/data/san-density/SAN1/SAN1_tail/SAN1_tail_ch2.tif',
+		#'/media/cudmore/data/san-density/SAN1/SAN1_head/SAN1_head_ch2.tif',
+		#'/media/cudmore/data/san-density/SAN1/SAN1_mid/SAN1_mid_ch2.tif',
+		'/media/cudmore/data/san-density/SAN1/SAN1_tail/SAN1_tail_ch2.tif',
 	]
 
 	# san2
@@ -31,7 +31,7 @@ if  __name__ == '__main__':
 		'/media/cudmore/data/san-density/SAN2/SAN2_tail/SAN2_tail_ch2.tif',
 	]
 	'''
-	
+
 	# SAN3
 	'''
 	pathList = [
