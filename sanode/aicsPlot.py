@@ -26,12 +26,12 @@ import bimpy
 
 import aicsMyocyteDistToVasc
 
-def defaultPlotLayout():
-
-	plotForTalk = False
+def defaultPlotLayout(plotForTalk=False):
 
 	if plotForTalk:
 		plt.style.use('dark_background')
+	else:
+		plt.style.use('default')
 
 	fontSize = 12
 	if plotForTalk:
@@ -342,7 +342,7 @@ def plotSlabDiamHist(pathList):
 	#
 	plt.show()
 
-def plot_hcn4_dist_hist(pathList, doPlot=True, keepAboveDist=0.2):
+def plot_hcn4_dist_hist(pathList, doPlot=True, verbose=True, keepAboveDist=0.2):
 	"""
 	Plot distribution of distance from each hcn4 mask pixel to nearest vasculature
 
@@ -358,8 +358,18 @@ def plot_hcn4_dist_hist(pathList, doPlot=True, keepAboveDist=0.2):
 
 	goodDistancesList = []
 
+	# make a df and save as .csv
+	df = pd.DataFrame(columns=['SAN', 'headMidTail', 'hcn4DistToVasc'])
+
 	# calculate
 	for idx, path in enumerate(pathList):
+		# figure out SAN and headMidTail
+		tmpPath, tmpFile = os.path.split(path)
+		# SAN2_head_ch2.tif
+		tmpFile, tmpExt = os.path.splitext(tmpFile)
+		# SAN2_head_ch2
+		sanName, headMidTail, channel = tmpFile.split('_')
+
 		# calculate the distance of each hcn4 pixel to nearest vasculature
 		thresholdDict, thresholdDistances = aicsMyocyteDistToVasc.aicsMyocyteDistToVasc(path)
 
@@ -393,10 +403,32 @@ def plot_hcn4_dist_hist(pathList, doPlot=True, keepAboveDist=0.2):
 		# append
 		goodDistancesList.append(goodDistances)
 
+		#
+		# make a dataframe
+		nOrig = goodDistances.size
+		# random select a subset
+		nSample = 1000000
+		goodDistances2 = np.random.choice(goodDistances, nSample, replace=False)
+		n = goodDistances2.size
+		print(f'  making df with {n} rows from original {nOrig}')
+
+		tmp_df = pd.DataFrame()
+		tmp_df['SAN'] = [sanName] * n
+		tmp_df['headMidTail'] = [headMidTail] * n
+		tmp_df['hcn4DistToVasc'] = goodDistances2
+
+		df = df.append(tmp_df, ignore_index = True)
+
+	#
+	# save dataframe df
+	dfFilePath = 'hcn4Dist.csv'
+	print('  saving dfFilePath:', dfFilePath, '... please wait')
+	df.to_csv(dfFilePath)
+
 	# stats
 	if 1:
 		for tmpList in goodDistancesList:
-			printStats(tmpList)
+			printStats(tmpList, verbose=verbose)
 
 		# Tests whether the distributions of two independent samples are equal or not.
 		# Observations in each sample are independent and identically distributed (iid).
@@ -656,7 +688,7 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='mean'):
 
 	yLabel = statCol[0].upper() + statCol[1:]
 	plt.xlabel('')
-	plt.ylabel(f'{yLabel} Distance from HCN4 pixels\nto vasculature ($\mu$m)')
+	plt.ylabel(f'{yLabel} HCN4 distance to vasculature ($\mu$m)')
 
 	# set the number of ticks
 	numOnXAxis = len(hmtList)
