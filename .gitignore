@@ -8,3 +8,4 @@ __pycache__
 .pynb_checkpoints
 
 sanode.egg-info
+notebooks/hcn4Dist.csv
