@@ -30,7 +30,7 @@ def rawDataDriver(folderStr, dateStr, gridShape, gDataPath='', smallDict=None):
 
 	aicsGridParam = mySetDefaultGridParams(gDataPath, folderStr, dateStr, gridShape)
 	if aicsGridParam is None:
-		pass
+		print('rawDataDriver() got None aicsGridParam ???')
 	else:
 		aicsGridNapari.aicsGridNapari(aicsGridParam, smallDict=smallDict)
 
