@@ -1,4 +1,4 @@
-## Raw data is at
+## Raw data is at 
 
 ```
 https://osf.io/q6atb/
@@ -29,7 +29,7 @@ pytorch
 
 ```
 brew update
-brew install llvm libomp 
+brew install llvm libomp
 ```
 
 llvm should be in `/usr/local/opt/llvm/include`
@@ -66,7 +66,7 @@ Edit compile to point -fopenmp to correct binary, for example
         if extra_postargs:
         	extra_postargs[-1] = '-I/usr/local/opt/llvm/include' + ' ' + '-fopenmp'
         print('   new extra_postargs:', extra_postargs)
-        
+
 ```
 
 Edit linking to point -fopenmp to correct binary, for example
