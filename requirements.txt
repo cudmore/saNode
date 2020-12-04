@@ -1,4 +1,9 @@
+numpy
 pandas
 napari
 skan
+itkwidgets
 matplotlib
+plotly
+plotly_express
+seaborn

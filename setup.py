@@ -16,15 +16,19 @@ setup(
     #    'pymapmanager',
     #    'pymapmanager.mmio'
     #],
-    setup_requires=[
-        #"numpy>1.18",
-        'pyqt5',
-    ],
+    #setup_requires=[
+    #    #"numpy>1.18",
+    #    'pyqt5',
+    #],
     install_requires=[
         'pandas',
         'napari',
         'pyqt5',
         'tifffile',
 		'matplotlib',
+		'plotly',
+		'plotly_express',
+		'seaborn',
+		'skan',
     ]
 )
