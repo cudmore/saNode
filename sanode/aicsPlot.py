@@ -21,12 +21,14 @@ import scipy.stats
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+#import seaborn as sns
+#sns.set_context("paper") # ('notebook', paper', 'talk', 'poster')
 
 import bimpy
 
 import aicsMyocyteDistToVasc
 
-def defaultPlotLayout(plotForTalk=False):
+def defaultPlotLayout(plotForTalk=True):
 
 	if plotForTalk:
 		plt.style.use('dark_background')
@@ -35,9 +37,9 @@ def defaultPlotLayout(plotForTalk=False):
 
 	fontSize = 12
 	if plotForTalk:
-		fontSize = 14
+		fontSize = 22
 
-	mpl.rcParams['figure.figsize'] = [3.0, 4.0]
+	mpl.rcParams['figure.figsize'] = [2.5, 3.0]
 	mpl.rcParams['figure.constrained_layout.use'] = True # also applies to plt.subplots(1)
 	mpl.rcParams['lines.linewidth'] = 3.0
 	mpl.rcParams["lines.markersize"] = 7 # default: 6.0
@@ -51,14 +53,22 @@ def defaultPlotLayout(plotForTalk=False):
 	mpl.rcParams['ytick.labelsize']=fontSize
 
 def printStats(dataList, verbose=True):
-	theMin = round(np.nanmin(dataList),2)
-	theMax = round(np.nanmax(dataList),2)
-	theMean = round(np.nanmean(dataList),2)
-	theSD = round(np.nanstd(dataList),2)
-	theNum = np.count_nonzero(~np.isnan(dataList))
-	theSEM = round(theSD / math.sqrt(theNum),2)
-	theMedian = round(np.nanmedian(dataList),2)
-
+	if dataList:
+		theMin = round(np.nanmin(dataList),2)
+		theMax = round(np.nanmax(dataList),2)
+		theMean = round(np.nanmean(dataList),2)
+		theSD = round(np.nanstd(dataList),2)
+		theNum = np.count_nonzero(~np.isnan(dataList))
+		theSEM = round(theSD / math.sqrt(theNum),2)
+		theMedian = round(np.nanmedian(dataList),2)
+	else:
+		theMin = np.nan
+		theMax = np.nan
+		theMean = np.nan
+		theSD = np.nan
+		theNum = np.nan
+		theSEM = np.nan
+		theMedian = np.nan
 	if verbose:
 		print(f'mean:{theMean:0.2f} sd:{theSD:0.2f} n:{theNum} min:{theMin:0.2f} max:{theMax:0.2f} median:{theMedian:0.2f}')
 
@@ -99,7 +109,10 @@ def plotEdgeDiamHist(pathList, doPlot=True, minNumberOfSlabs=5):
 		# check if all nan and bail
 		isAllNaN = np.isnan(xData).all()
 		if isAllNaN:
-			print(f'bPyQtPlot.plotEdgeDiamHist() is not plotting {xStat}, it is all np.nan')
+			print(f'!!! !!! !!! bPyQtPlot.plotEdgeDiamHist() is not plotting Diam2, it is all np.nan, path:', path)
+			# append
+			numSlabList.append([])
+			meanEdgeDiamList.append([])
 			continue
 
 		# remove nan, order matters
@@ -142,9 +155,9 @@ def plotEdgeDiamHist(pathList, doPlot=True, minNumberOfSlabs=5):
 	nList = []
 	medianList = []
 	for idx, path in enumerate(pathList):
-		theDiameters = meanEdgeDiamList[idx] # pixels
 		print(f'{idx+1} path:{path}')
 		print(f'  x/y/z voxel size:{voxelSizeList[idx]}')
+		theDiameters = meanEdgeDiamList[idx] # pixels
 		theMean, theSD, theSEM, theMedian, theN = printStats(theDiameters)
 		meanList.append(theMean)
 		sdList.append(theSD)
@@ -156,14 +169,14 @@ def plotEdgeDiamHist(pathList, doPlot=True, minNumberOfSlabs=5):
 		defaultPlotLayout()
 		fig,axs = plt.subplots(numPath, 1, figsize=(4,4)) # need constrained_layout=True to see axes titles
 		cumFig, cumAxis = plt.subplots(1,1)
-		nSlabsFig, nSlabsAxis = plt.subplots(3, 1, figsize=(4,4))
+		nSlabsFig, nSlabsAxis = plt.subplots(numPath, 1, figsize=(4,4))
 
 		# plot a number of hist
-		bins = [(x+1)*(xVoxel) for x in range(30)]
+		bins = [(x+1)*(xVoxel) for x in range(50)]
 		#bins = 'auto'
 
-		colorList = ['r', 'g', 'b']
-		colorList = ['k', '0.5', '0.5']
+		#colorList = ['r', 'g', 'b', 'm', 'y', 'r', 'g', 'b', 'm', 'y']
+		colorList = ['tab:blue', 'tab:orange', '0.5', '0.5', 'r', 'g', 'b']
 		# plot
 		for idx, path in enumerate(pathList):
 			tmpPath, tmpFile = os.path.split(path) # for title/legend
@@ -179,6 +192,7 @@ def plotEdgeDiamHist(pathList, doPlot=True, minNumberOfSlabs=5):
 			theSD = round(np.nanstd(theDiameters),2)
 			theNum = np.count_nonzero(~np.isnan(theDiameters))
 			label = f'{tmpFile}\n$\mu$={theMean} $\sigma$={theSD} n={theNum}'
+			label = None
 
 			edgeColor = 'k'
 			if color == 'k':
@@ -211,6 +225,7 @@ def plotEdgeDiamHist(pathList, doPlot=True, minNumberOfSlabs=5):
 			cumAxis.set_ylabel('Probability')
 
 			# plot nSlabs versus diam
+			print(len(nSlabsAxis), idx, len(theDiameters), len(theNumberOfSlabs), color)
 			nSlabsAxis[idx].scatter(theDiameters, theNumberOfSlabs, marker='o', color=color)
 			if idx==2:
 				pass
@@ -225,7 +240,7 @@ def plotEdgeDiamHist(pathList, doPlot=True, minNumberOfSlabs=5):
 		plt.show()
 	#
 	# end
-	return meanList, sdList, medianList, nList
+	return meanList, sdList, medianList, nList, axs, cumAxis
 
 def plotSlabDiamHist(pathList):
 	"""
@@ -537,6 +552,7 @@ def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 	"""
 
 	defaultPlotLayout()
+	#sns.set_context("paper") # ('notebook', paper', 'talk', 'poster')
 
 	# load csv into pd dataframe
 	if csvFile is None:
@@ -548,6 +564,7 @@ def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 	sanMarkers = ['o', '^', 's', 'd']
 	regionList = ['head', 'mid', 'tail']
 	regionList = ['head', 'tail']
+	hmtListLabel = ['Superior', 'Inferior']
 
 	# column to pull plot values form
 	statCol = 'vMaskPercent'
@@ -578,21 +595,22 @@ def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 	print('  inferiorList:', inferiorList)
 	#print(regionListData)
 
-	colorChars = ['r', 'g', 'b', 'y'] # one color for each of SAN1, SAN2, ...
+	#colorChars = ['r', 'g', 'b', 'y'] # one color for each of SAN1, SAN2, ...
+	colorChars = ["0.8", "0.8", "0.8", "0.8"] # one color for each of SAN1, SAN2, ...
 
-	fig,ax = plt.subplots(1) # need constrained_layout=True to see axes titles
+	fig,ax = plt.subplots(1, figsize=(6,6)) # need constrained_layout=True to see axes titles
 	for idx, data in enumerate(dataList):
 		colorChar = colorChars[idx]
 		marker = sanMarkers[idx]
 		#ax.plot(regionList, data, colorChar)
 		ax.plot(data, color=colorChar,
-				linewidth=1, markersize=4, marker=marker)
+				linewidth=3, markersize=6, marker=marker)
 
 	# set x-axis tick marks to region as a category
 	# how do I do this with ax. instead of global plt. ?
 	# does not work
 	#ax.set_xticklabels(regionList)
-	plt.xticks([0,1], regionList)
+	plt.xticks([0,1], hmtListLabel)
 	#ax.set_xticks(regionList)
 
 	if plotMean:
@@ -602,7 +620,7 @@ def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 			iMean, iSD, iSEM, iMedian, iN = printStats(inferiorList, verbose=False)
 			xMeanPlot = [-0.1, 1.1]
 			ax.errorbar(xMeanPlot, [sMean, iMean], yerr=[sSEM, iSEM],
-						color='k', linewidth=3, markersize=8, marker='s')
+						linewidth=4, markersize=8, marker='s')
 
 		# v2 this follows regions
 		# THIS IS NOT WORKING !!!!!!!!!!!!!!
@@ -638,7 +656,7 @@ def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 	plt.show()
 
 	# each list is for san1/2/3/4
-	return superiorList, inferiorList
+	return superiorList, inferiorList, ax
 
 def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='mean'):
 	"""
@@ -661,8 +679,10 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='mean'):
 	df = pd.read_csv(csvFile)
 
 	sanList = ['SAN1', 'SAN2', 'SAN3', 'SAN4']
+	sanMarkers = ['o', '^', 's', 'd']
 	hmtList = ['head', 'mid', 'tail']
 	hmtList = ['head', 'tail']
+	hmtListLabel = ['Superior', 'Inferior']
 
 	# column to pull plot values form
 	#statCol = 'mean'
@@ -679,16 +699,36 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='mean'):
 		print(sanStr, oneList)
 
 	colorChars = ['r', 'g', 'b', 'y'] # one color for each of SAN1, SAN2, ...
+	colorChars = ['k', 'k', 'k', 'k'] # one color for each of SAN1, SAN2, ...
+	colorChars = ["0.8", "0.8", "0.8", "0.8"] # one color for each of SAN1, SAN2, ...
 
-	fig,ax = plt.subplots(1) # need constrained_layout=True to see axes titles
+	fig,ax = plt.subplots(1, figsize=(6,6)) # need constrained_layout=True to see axes titles
 	for idx, data in enumerate(dataList):
 		colorChar = colorChars[idx]
+		marker = sanMarkers[idx]
 		#ax.plot(hmtList, data, colorChar)
-		ax.plot(data, color=colorChar)
+		ax.plot(data, color=colorChar,
+			linewidth=3, markersize=6, marker=marker)
+
+	# set x-axis tick marks to region as a category
+	# how do I do this with ax. instead of global plt. ?
+	# does not work
+	#ax.set_xticklabels(regionList)
+	plt.xticks([0,1], hmtListLabel)
+
+	plotMean = True
+	if plotMean:
+		# this is for (Superior, inferior)
+		if 1:
+			sMean, sSD, sSEM, sMedian, sN = printStats(superiorList, verbose=False)
+			iMean, iSD, iSEM, iMedian, iN = printStats(inferiorList, verbose=False)
+			xMeanPlot = [-0.1, 1.1]
+			ax.errorbar(xMeanPlot, [sMean, iMean], yerr=[sSEM, iSEM],
+						linewidth=4, markersize=8, marker='s')
 
 	yLabel = statCol[0].upper() + statCol[1:]
 	plt.xlabel('')
-	plt.ylabel(f'{yLabel} HCN4 distance to vasculature ($\mu$m)')
+	plt.ylabel(f'{yLabel} HCN4 Distance\nto Vasculature ($\mu$m)')
 
 	# set the number of ticks
 	numOnXAxis = len(hmtList)
@@ -697,7 +737,7 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='mean'):
 	#
 	plt.show()
 
-	return superiorList, inferiorList
+	return superiorList, inferiorList, ax
 
 if __name__ == '__main__':
 
@@ -706,7 +746,7 @@ if __name__ == '__main__':
 		plotMeanDist()
 
 	# plot the density of a ch1/ch2 mask in % um^3
-	if 1:
+	if 0:
 		channel = 2
 		plotMaskDensity(channel)
 
@@ -745,7 +785,7 @@ if __name__ == '__main__':
 
 		plot_hcn4_dist_hist(pathList)
 
-	if 0:
+	if 1:
 		pathList = []
 
 		# SAN2
@@ -770,12 +810,36 @@ if __name__ == '__main__':
 			'/media/cudmore/data/san-density/SAN4/SAN4_tail/aicsAnalysis/SAN4_tail_ch2.tif',
 		]
 		'''
+		tmpPathList = []
+		tmpPathList += [
+		    '/media/cudmore/data/san-density/SAN1/SAN1_head/aicsAnalysis/SAN1_head_ch2.tif',
+		    #'/media/cudmore/data/san-density/SAN1/SAN1_mid/aicsAnalysis/SAN1_mid_ch2.tif',
+		    '/media/cudmore/data/san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif',
+		    ]
+		tmpPathList += [
+		    '/media/cudmore/data/san-density/SAN2/SAN2_head/aicsAnalysis/SAN2_head_ch2.tif',
+		    #'/media/cudmore/data/san-density/SAN2/SAN2_mid/aicsAnalysis/SAN2_mid_ch2.tif',
+		    '/media/cudmore/data/san-density/SAN2/SAN2_tail/aicsAnalysis/SAN2_tail_ch2.tif',
+		    ]
+		# SAN3
+		tmpPathList += [
+		    '/media/cudmore/data/san-density/SAN3/SAN3_head/aicsAnalysis/SAN3_head_ch2.tif',
+		    #'/media/cudmore/data/san-density/SAN3/SAN3_mid/aicsAnalysis/SAN3_mid_ch2.tif',
+		    '/media/cudmore/data/san-density/SAN3/SAN3_tail/aicsAnalysis/SAN3_tail_ch2.tif',
+		    ]
+		# SAN4
+		tmpPathList += [
+		    '/media/cudmore/data/san-density/SAN4/SAN4_head/aicsAnalysis/SAN4_head_ch2.tif',
+		    #'/media/cudmore/data/san-density/SAN4/SAN4_mid/aicsAnalysis/SAN4_mid_ch2.tif',
+		    '/media/cudmore/data/san-density/SAN4/SAN4_tail/aicsAnalysis/SAN4_tail_ch2.tif',
+		    ]
+		pathList = tmpPathList
 
 		# all slabs contribute
 		if 0:
 			plotSlabDiamHist(pathList)
 		# plot mDiam of each edge
-		if 0:
-			plotEdgeDiamHist(pathList)
 		if 1:
+			plotEdgeDiamHist(pathList)
+		if 0:
 			plot_hcn4_dist_hist(pathList)

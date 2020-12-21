@@ -159,7 +159,14 @@ def loadRoiZip2(roiZipPath, xyzVoxel=(1,1,1), sanStr='', origRegions=''):
 		#diam_list[idx] = df.iloc[idx]['Length']
 		distPixels = _euclideanDist(x1, y1, x2, y2)
 		distUm = distPixels * xyzVoxel[0]
-		diam_list[idx] = distUm
+
+		if group==1 and distUm < 10:
+			print('!!! FIX: loadRoiZip2() found very narrow group 1 -->> setting to np.nan')
+			print('  distUm:', distUm)
+			diam_list[idx] = np.nan
+		else:
+			diam_list[idx] = distUm
+
 
 		# color based on group
 		'''
@@ -471,7 +478,7 @@ def _euclideanDist(x1, y1, x2, y2):
 	dist = math.sqrt(dx**2 + dy**2)
 	return dist
 
-def parseBranches(roiDf):
+def parseBranches(roiDf, debug=False):
 	"""
 	Extract individual vessel segments
 
@@ -500,6 +507,9 @@ def parseBranches(roiDf):
 		for dfIdx, oneRow in oneGroupDf.iterrows():
 			#print(dfIdx)
 			group = oneRow['group']
+			diameter_um = oneRow['diameter_um']
+			if group==1 and diameter_um<10:
+				print('=== FIX: roi manager:', dfIdx, 'is group 1 but diam is narrow:', diameter_um)
 			xVoxel = oneRow['xVoxel'] # um/pixel
 			yVoxel = oneRow['yVoxel'] # um/pixel
 			xMid = oneRow['xMid'] # pixel
@@ -516,31 +526,35 @@ def parseBranches(roiDf):
 				# disjoint master df index within a group
 				# start new segment
 				dfStopIdx = dfIdx_prev
-				'''
-				print('  * disjoint master df index within group ... finish current segment')
-				print('    dfStartIdx:', dfStartIdx)
-				print('    dfStopIdx:', dfStopIdx)
-				'''
-			else:
-				dist_um = _euclideanDist(xMid_um, yMid_um, xMid_um_prev, yMid_um_prev)
-				if dist_um > 50:
-					'''
-					print('  * found big gap ... finish current segment')
+				if debug:
+					print('  * disjoint master df index within group ... finish current segment')
 					print('    dfStartIdx:', dfStartIdx)
 					print('    dfStopIdx:', dfStopIdx)
-					'''
-					dfStopIdx = dfIdx_prev
+			else:
+				dist_um = _euclideanDist(xMid_um, yMid_um, xMid_um_prev, yMid_um_prev)
+				if dist_um > 96:
+					if group==1:
+						if debug: print('  !! ignoring big gap in group 1 (Artery), dist_um=',dist_um)
+					else:
+						if debug:
+							print('  * found big gap ... finish current segment')
+							print('    dist_um:', dist_um)
+							print('    group:', group)
+							print('    masterVesselIdx:', masterVesselIdx)
+							print('    start roi manager idx:', dfStartIdx+1)
+							print('    dfStartIdx:', dfStartIdx)
+							print('    dfStopIdx:', dfStopIdx)
+						dfStopIdx = dfIdx_prev
 
 			if dfStartIdx is not None and dfStopIdx is not None:
 				# we just finished a single vessel segment
-				'''
-				print('      *** Finished vesssel ')
-				print('           at dfIdx', dfIdx)
-				print('           group', group)
-				print('           masterVesselIdx', masterVesselIdx)
-				print('           from dfStartIdx', dfStartIdx)
-				print('           to dfStopIdx', dfStopIdx)
-				'''
+				if debug:
+					print('      *** Finished vesssel ')
+					print('           at dfIdx', dfIdx)
+					print('           group', group)
+					print('           masterVesselIdx', masterVesselIdx)
+					print('           from dfStartIdx', dfStartIdx)
+					print('           to dfStopIdx', dfStopIdx)
 
 				# assign rows in df to masterVesselIDx
 				# SUPER IMPORTANT, NEED TO have df['colName'] FIRST
@@ -567,14 +581,13 @@ def parseBranches(roiDf):
 			# we started a vessel segment but did not finish it, finish it here
 			# using dfIdx_prev is error prone !!!
 			dfStopIdx = oneGroupDf.index[-1] # last row
-			'''
-			print('    === AFTER loop, cleaning up vessel segment')
-			#print('           group', group)
-			print('      masterVesselIdx:', masterVesselIdx)
-			print('      dfStartIdx:', dfStartIdx)
-			print('      dfStopIdx:', dfStopIdx)
-			'''
-			
+			if debug:
+				print('    === AFTER loop, cleaning up vessel segment')
+				print('      group', group)
+				print('      masterVesselIdx:', masterVesselIdx)
+				print('      dfStartIdx:', dfStartIdx)
+				print('      dfStopIdx:', dfStopIdx)
+
 			# assign rows in df to masterVesselIdx
 			# SUPER IMPORTANT, NEED TO have df['colName'] FIRST
 			#roiDf['masterVesselIdx'].iloc[dfStartIdx:dfStopIdx+1] = masterVesselIdx
@@ -595,14 +608,16 @@ if __name__ == '__main__':
 		print(roi_df.head())
 
 	path = '/media/cudmore/data/san-density/SAN4/tracing/head/SAN4_head_BIG__ch2.tif'
+	path = '/media/cudmore/data/san-density/SAN5/tracing/SAN5_BIG__ch1.tif'
 	roi_df, maxImg = loadRoiFiles(path, sanStr='xSanStr', origRegions='xOrigRegion')
-	roi_df = parseBranches(roi_df)
+	roi_df = parseBranches(roi_df, debug=True)
 
 	'''
 	with pd.option_context('display.max_rows', None):
 		print(roi_df[ ['group', 'masterVesselIdx'] ])
 	'''
 
+	'''
 	desc = roi_df.groupby('group')['masterVesselIdx'].describe()
 	print(desc)
 
@@ -618,3 +633,4 @@ if __name__ == '__main__':
 		print(desc)
 		meanList = oneGroupDf.groupby('masterVesselIdx')['diameter_um'].mean().tolist()
 		print(meanList)
+	'''

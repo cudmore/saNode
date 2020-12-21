@@ -138,7 +138,7 @@ if __name__ == '__main__':
 
 	# do batch
 	if 1:
-		channel = 1
+		channel = 2
 		# san1
 		pathList = [
 			f'/media/cudmore/data/san-density/SAN1/SAN1_head/aicsAnalysis/SAN1_head_ch{channel}.tif',
@@ -164,9 +164,25 @@ if __name__ == '__main__':
 			f'/media/cudmore/data/san-density/SAN4/SAN4_tail/aicsAnalysis/SAN4_tail_ch{channel}.tif',
 		]
 
+		# san7
+		pathList += [
+			#f'/media/cudmore/data/san-density/SAN7/SAN7_head/aicsAnalysis/20201202__ch{channel}.tif',
+			f'/media/cudmore/data/san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch{channel}.tif',
+			f'/media/cudmore/data/san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch{channel}.tif',
+
+			f'/media/cudmore/data/san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch{channel}.tif',
+			f'/media/cudmore/data/san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch{channel}.tif',
+			f'/media/cudmore/data/san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch{channel}.tif',
+			f'/media/cudmore/data/san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch{channel}.tif',
+			f'/media/cudmore/data/san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch{channel}.tif',
+
+		]
+
 		import pandas as pd
 
 		for idx, path in enumerate(pathList):
+			if not os.path.isfile(path):
+				print('\nERROR: did not find path:', path, '\n')
 			retDict = aicsMaskDen(path)
 			print(f'\n{idx+1} of {len(pathList)}')
 			if retDict is not None:
@@ -174,7 +190,7 @@ if __name__ == '__main__':
 			else:
 				print('  ERROR !!!!!!!!!!!!!!!!!!!!!!')
 
-			# save to csv with pandas
+			# append/save to csv with pandas
 			csvPath = f'/home/cudmore/Sites/saNode/Density-Result-ch{channel}.csv'
 			df = pd.DataFrame(retDict, index=[idx])
 			doHeader = True #pandasIdx==0

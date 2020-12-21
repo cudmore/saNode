@@ -17,11 +17,13 @@ import aicsVasc
 if  __name__ == '__main__':
 
 	# san1
+	'''
 	pathList = [
 		#'/media/cudmore/data/san-density/SAN1/SAN1_head/SAN1_head_ch2.tif',
 		#'/media/cudmore/data/san-density/SAN1/SAN1_mid/SAN1_mid_ch2.tif',
 		'/media/cudmore/data/san-density/SAN1/SAN1_tail/SAN1_tail_ch2.tif',
 	]
+	'''
 
 	# san2
 	'''
@@ -50,6 +52,19 @@ if  __name__ == '__main__':
 		'/media/cudmore/data/san-density/SAN4/SAN4_tail/SAN4_tail_ch2.tif',
 	]
 	'''
+
+	# san 7
+	pathList = [
+		'/media/cudmore/data/san-density/SAN7/SAN7_head/20201202__0000_ch2.tif',
+		'/media/cudmore/data/san-density/SAN7/SAN7_head/20201202__0001_ch2.tif',
+		'/media/cudmore/data/san-density/SAN7/SAN7_head/20201202__0002_ch2.tif',
+
+		'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0003_ch2.tif',
+		'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0004_ch2.tif',
+		'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0005_ch2.tif',
+		'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0006_ch2.tif',
+		'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0007_ch2.tif',
+	]
 
 	trimPercent = None
 	m = len(pathList)

@@ -87,6 +87,45 @@ aicsBlankSlicesDict[keyStr] = {}
 aicsBlankSlicesDict[keyStr]['top'] = 27
 aicsBlankSlicesDict[keyStr]['bottom'] = 43
 
+#
+# adding SAN7 on 20201221
+# this is not in a grid (thus we do not have one file)
+# need to specify each stack like
+# /media/cudmore/data/san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch1.tif
+#
+# san7
+# head
+keyStr = '20201202__0001'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 18
+aicsBlankSlicesDict[keyStr]['bottom'] = 50
+keyStr = '20201202__0002'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 15
+aicsBlankSlicesDict[keyStr]['bottom'] = 47
+# tail
+keyStr = '20201202__0003'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 36
+aicsBlankSlicesDict[keyStr]['bottom'] = 55
+keyStr = '20201202__0004'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 13
+aicsBlankSlicesDict[keyStr]['bottom'] = 46
+keyStr = '20201202__0005' # very large endothelial something below slice 24
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 11
+aicsBlankSlicesDict[keyStr]['bottom'] = 24
+keyStr = '20201202__0006'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 23
+aicsBlankSlicesDict[keyStr]['bottom'] = 55
+keyStr = '20201202__0007'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 20
+aicsBlankSlicesDict[keyStr]['bottom'] = 52
+
+
 ##############################################################################
 import os
 

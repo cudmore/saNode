@@ -19,7 +19,7 @@ aicsVasc.py
 
 Use batch for each of san3, san4, ...
 
-Be sure to modify ...Batch.py with correct files for San3, San4
+Be sure to modify ...Batch.py with correct files for San3, San4, etc
 
 aicsVasc.py takes 2-3 minutes per file
 
