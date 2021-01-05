@@ -70,7 +70,7 @@ def printStats(dataList, verbose=True):
 		theSEM = np.nan
 		theMedian = np.nan
 	if verbose:
-		print(f'mean:{theMean:0.2f} sd:{theSD:0.2f} n:{theNum} min:{theMin:0.2f} max:{theMax:0.2f} median:{theMedian:0.2f}')
+		print(f'mean:{theMean:0.2f} sd:{theSD:0.2f} sem:{theSEM:0.2f} n:{theNum} min:{theMin:0.2f} max:{theMax:0.2f} median:{theMedian:0.2f}')
 
 	return theMean, theSD, theSEM, theMedian, theNum
 
@@ -556,12 +556,13 @@ def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 
 	# load csv into pd dataframe
 	if csvFile is None:
+		print('plotMaskDensity() is using default')
 		csvFile = f'../Density-Result-ch{channel}.csv'
 	df = pd.read_csv(csvFile)
 	#print(df)
 
-	sanList = ['SAN1', 'SAN2', 'SAN3', 'SAN4']
-	sanMarkers = ['o', '^', 's', 'd']
+	sanList = ['SAN1', 'SAN2', 'SAN3', 'SAN4', 'SAN7']
+	sanMarkers = ['o', '^', 's', 'd', 'o']
 	regionList = ['head', 'mid', 'tail']
 	regionList = ['head', 'tail']
 	hmtListLabel = ['Superior', 'Inferior']
@@ -596,7 +597,7 @@ def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 	#print(regionListData)
 
 	#colorChars = ['r', 'g', 'b', 'y'] # one color for each of SAN1, SAN2, ...
-	colorChars = ["0.8", "0.8", "0.8", "0.8"] # one color for each of SAN1, SAN2, ...
+	colorChars = ["0.8"] * len(sanList) #, "0.8", "0.8", "0.8"] # one color for each of SAN1, SAN2, ...
 
 	fig,ax = plt.subplots(1, figsize=(6,6)) # need constrained_layout=True to see axes titles
 	for idx, data in enumerate(dataList):
@@ -655,10 +656,17 @@ def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 	#
 	plt.show()
 
+	#
+	printStats(superiorList)
+	printStats(inferiorList)
+	# alternative:{“two-sided”, “greater”, “less”},
+	stat, p01 = scipy.stats.wilcoxon(superiorList, inferiorList, alternative='greater')
+	print('wilcoxon stat:', stat, 'p:', p01)
+
 	# each list is for san1/2/3/4
 	return superiorList, inferiorList, ax
 
-def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='mean'):
+def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='median'):
 	"""
 	plot mean dist of hcn4 to nearest vasculature
 
@@ -678,8 +686,8 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='mean'):
 	#csvFile = '../hcn4-Distance-Result.csv'
 	df = pd.read_csv(csvFile)
 
-	sanList = ['SAN1', 'SAN2', 'SAN3', 'SAN4']
-	sanMarkers = ['o', '^', 's', 'd']
+	sanList = ['SAN1', 'SAN2', 'SAN3', 'SAN4', 'SAN7']
+	sanMarkers = ['o', '^', 's', 'd', 'o']
 	hmtList = ['head', 'mid', 'tail']
 	hmtList = ['head', 'tail']
 	hmtListLabel = ['Superior', 'Inferior']
@@ -698,9 +706,9 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='mean'):
 		inferiorList.append(oneList[1])
 		print(sanStr, oneList)
 
-	colorChars = ['r', 'g', 'b', 'y'] # one color for each of SAN1, SAN2, ...
-	colorChars = ['k', 'k', 'k', 'k'] # one color for each of SAN1, SAN2, ...
-	colorChars = ["0.8", "0.8", "0.8", "0.8"] # one color for each of SAN1, SAN2, ...
+	#colorChars = ['r', 'g', 'b', 'y'] # one color for each of SAN1, SAN2, ...
+	#colorChars = ['k', 'k', 'k', 'k'] # one color for each of SAN1, SAN2, ...
+	colorChars = ["0.8"] * len(sanList) #, "0.8", "0.8", "0.8"] # one color for each of SAN1, SAN2, ...
 
 	fig,ax = plt.subplots(1, figsize=(6,6)) # need constrained_layout=True to see axes titles
 	for idx, data in enumerate(dataList):
@@ -736,6 +744,13 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='mean'):
 
 	#
 	plt.show()
+
+	#
+	printStats(superiorList)
+	printStats(inferiorList)
+	# alternative:{“two-sided”, “greater”, “less”},
+	stat, p01 = scipy.stats.wilcoxon(superiorList, inferiorList, alternative='less')
+	print('wilcoxon stat:', stat, 'p:', p01)
 
 	return superiorList, inferiorList, ax
 

@@ -15,6 +15,7 @@ if __name__ == '__main__':
 
 	#
 	# san1
+	'''
 	pathList = [
 		# san1 _ch1
 		#'/media/cudmore/data/san-density/SAN1/SAN1_head/aicsAnalysis/SAN1_head_ch1.tif',
@@ -25,6 +26,7 @@ if __name__ == '__main__':
 		#'/media/cudmore/data/san-density/SAN1/SAN1_mid/aicsAnalysis/SAN1_mid_ch2.tif',
 		'/media/cudmore/data/san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif',
 	]
+	'''
 
 	#
 	# san2
@@ -71,14 +73,38 @@ if __name__ == '__main__':
 	]
 	'''
 
+	# san7
+	# on reboot, my data drives keeps getting mounted on /media/cudmore/data1
+	rootPath = '/media/cudmore/data1/'
+	pathList = [
+		# san7 _ch1
+		f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch1.tif',
+		f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch1.tif',
+
+		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch1.tif',
+		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch1.tif',
+		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch1.tif',
+		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch1.tif',
+		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch1.tif',
+		# san7 _ch2
+		f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch2.tif',
+		f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch2.tif',
+
+		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch2.tif',
+		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch2.tif',
+		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch2.tif',
+		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch2.tif',
+		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch2.tif',
+	]
+
 	# remember, was NEED TO LIMIT top/bottom slice with aicsBlankSlices.getTopBottom(path)
 
 	m = len(pathList)
 	for idx, path in enumerate(pathList):
 		print(f'\n{idx+1} of {m} {path}')
 
-		if not os.path.exists(path):
-			print('ERROR: aicsDistMapBath() path does not exist:', path)
+		if not os.path.isfile(path):
+			print('ERROR: aicsDistMapBath() file does not exist:', path)
 			continue
 
 		(maskStart, maskStop) = aicsBlankSlices.getTopBottom(path)

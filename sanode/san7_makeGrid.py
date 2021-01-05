@@ -15,13 +15,13 @@ gDataPath = '/media/cudmore/data/san-density' # moved to ssd drive
 
 # Head
 # file numbers 10,11,14,15
-folderStr = '20200729'
-dateStr = '20200729'
+folderStr = '20201202_SAN7/Superior'
+dateStr = '20201202'
 gridShape = (16,5)
 
 smallDict = {
-	'mainFolder': 'SAN6', # will create 2-folders SAN3/SAN3_tail/
-	'saveName': 'SAN6',
+	'mainFolder': 'SAN7', # will create 2-folders SAN3/SAN3_tail/
+	'saveName': 'SAN7_head',
 	'nRows': 0,
 	'nCols': 0,
 	'rowColIdxList': [
