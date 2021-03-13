@@ -53,7 +53,7 @@ def defaultPlotLayout(plotForTalk=True):
 	mpl.rcParams['ytick.labelsize']=fontSize
 
 def printStats(dataList, verbose=True):
-	if dataList:
+	if len(dataList)>0:
 		theMin = round(np.nanmin(dataList),2)
 		theMax = round(np.nanmax(dataList),2)
 		theMean = round(np.nanmean(dataList),2)
@@ -133,7 +133,8 @@ def plotEdgeDiamHist(pathList, doPlot=True, minNumberOfSlabs=5):
 			numInTail = 217
 			tmpRange = range(numInHead)
 			rndIdx = random.sample(tmpRange, numInTail)
-			print('taking random sample for idx 0, n=', numInTail)
+			print('  aicsPlot.plotEdgeDiamHist() taking random sample for idx 0, n=', numInTail)
+			print('    I have hard coded numInTail=127 ... MAY BREAK ON OTHER STACKS !!!')
 			xData = [xData[tmpIdx] for tmpIdx in rndIdx]
 			numSlabs = [numSlabs[tmpIdx] for tmpIdx in rndIdx]
 
@@ -164,6 +165,8 @@ def plotEdgeDiamHist(pathList, doPlot=True, minNumberOfSlabs=5):
 		medianList.append(theMedian)
 		nList.append(theN)
 
+	axs = None # we return this
+	cumAxis = None # we return this
 	if doPlot:
 		# set up plot
 		defaultPlotLayout()
@@ -315,7 +318,7 @@ def plotSlabDiamHist(pathList):
 		color = colorList[idx]
 
 		theDiameters = diameterList[idx] # pixels
-
+		print('  aicsPlot.plotSlabDiamList() theDiameters:', len(theDiameters))
 		# plot hist
 		theMean = round(np.nanmean(theDiameters),2)
 		theSD = round(np.nanstd(theDiameters),2)
@@ -357,7 +360,11 @@ def plotSlabDiamHist(pathList):
 	#
 	plt.show()
 
-def plot_hcn4_dist_hist(pathList, doPlot=True, verbose=True, keepAboveDist=0.2):
+def plot_hcn4_dist_hist(pathList, doPlot=True, verbose=True,
+						newSanNameList=None,
+						newHeadMidTailList=None,
+						keepAboveDist=0.2,
+						dfFilePath='hcn4Dist.csv'):
 	"""
 	Plot distribution of distance from each hcn4 mask pixel to nearest vasculature
 
@@ -383,7 +390,13 @@ def plot_hcn4_dist_hist(pathList, doPlot=True, verbose=True, keepAboveDist=0.2):
 		# SAN2_head_ch2.tif
 		tmpFile, tmpExt = os.path.splitext(tmpFile)
 		# SAN2_head_ch2
-		sanName, headMidTail, channel = tmpFile.split('_')
+		if newSanNameList and newHeadMidTailList:
+			# get head/mid/tail from list
+			sanName = newSanNameList[idx]
+			headMidTail = newHeadMidTailList[idx]
+		else:
+			# get san/headMidTailFrom file
+			sanName, headMidTail, channel = tmpFile.split('_')
 
 		# calculate the distance of each hcn4 pixel to nearest vasculature
 		thresholdDict, thresholdDistances = aicsMyocyteDistToVasc.aicsMyocyteDistToVasc(path)
@@ -422,22 +435,35 @@ def plot_hcn4_dist_hist(pathList, doPlot=True, verbose=True, keepAboveDist=0.2):
 		# make a dataframe
 		nOrig = goodDistances.size
 		# random select a subset
-		nSample = 1000000
-		goodDistances2 = np.random.choice(goodDistances, nSample, replace=False)
-		n = goodDistances2.size
-		print(f'  making df with {n} rows from original {nOrig}')
+		# for my 2x2 I was using 1e6
+		# 20210111 for just single stacks, use 250,000
+		# this is for san7 (songle stack
+		nSample = 50000 #1000000
+		# this is for th erest where our single stcks are actually 2x2 grid of stacks
+		nSample = 100000 #1000000
+		okGo = True
+		if nSample > nOrig:
+			print('NOT TAKING path:', path)
+			print('  nOrig:', nOrig)
+			okGo = False
+		if okGo:
+			goodDistances2 = np.random.choice(goodDistances, nSample, replace=False)
+			n = goodDistances2.size
+			print(f'  making df with {n} rows from original {nOrig}')
 
-		tmp_df = pd.DataFrame()
-		tmp_df['SAN'] = [sanName] * n
-		tmp_df['headMidTail'] = [headMidTail] * n
-		tmp_df['hcn4DistToVasc'] = goodDistances2
+			tmp_df = pd.DataFrame()
+			#tmp_df['path'] = [path] * n # abb 20210111 to handle san7 which has multiple stacks per head/mid/tail
+			tmp_df['file'] = [tmpFile] * n
+			tmp_df['SAN'] = [sanName] * n
+			tmp_df['headMidTail'] = [headMidTail] * n
+			tmp_df['hcn4DistToVasc'] = goodDistances2
 
-		df = df.append(tmp_df, ignore_index = True)
+			df = df.append(tmp_df, ignore_index = True)
 
 	#
 	# save dataframe df
-	dfFilePath = 'hcn4Dist.csv'
-	print('  saving dfFilePath:', dfFilePath, '... please wait')
+	#dfFilePath = 'hcn4Dist.csv'
+	print('  saving', df.shape, 'dfFilePath:', dfFilePath, '... please wait')
 	df.to_csv(dfFilePath)
 
 	# stats
@@ -538,12 +564,12 @@ def plot_hcn4_dist_hist(pathList, doPlot=True, verbose=True, keepAboveDist=0.2):
 			cumAxis.set_xlabel('HCN4 distance to vasculature ($\mu$m)')
 			cumAxis.set_ylabel('Probability')
 
-	#
-	plt.show()
+		#
+		plt.show()
 
 	return goodDistancesList
 
-def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
+def plotMaskDensity(channel=2, csvFile=None, plotMean=True, plotForTalk=True, ax=None):
 	"""
 	plot the percent of a mask occupying a valume
 
@@ -551,7 +577,7 @@ def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 	there is no mean here, this is an absolute count per stack
 	"""
 
-	defaultPlotLayout()
+	defaultPlotLayout(plotForTalk=plotForTalk)
 	#sns.set_context("paper") # ('notebook', paper', 'talk', 'poster')
 
 	# load csv into pd dataframe
@@ -561,8 +587,8 @@ def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 	df = pd.read_csv(csvFile)
 	#print(df)
 
-	sanList = ['SAN1', 'SAN2', 'SAN3', 'SAN4', 'SAN7']
-	sanMarkers = ['o', '^', 's', 'd', 'o']
+	sanList = ['SAN1', 'SAN2', 'SAN3', 'SAN4', 'SAN7', 'SAN8']
+	sanMarkers = ['o', '^', 's', 'd', '<', 'v']
 	regionList = ['head', 'mid', 'tail']
 	regionList = ['head', 'tail']
 	hmtListLabel = ['Superior', 'Inferior']
@@ -592,14 +618,15 @@ def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 		'''
 		print('  ', sanStr, oneList)
 
-	print('  superiorList:', superiorList)
-	print('  inferiorList:', inferiorList)
+	print('  plotMaskDensity superiorList:', superiorList)
+	print('  plotMaskDensity inferiorList:', inferiorList)
 	#print(regionListData)
 
 	#colorChars = ['r', 'g', 'b', 'y'] # one color for each of SAN1, SAN2, ...
 	colorChars = ["0.8"] * len(sanList) #, "0.8", "0.8", "0.8"] # one color for each of SAN1, SAN2, ...
 
-	fig,ax = plt.subplots(1, figsize=(6,6)) # need constrained_layout=True to see axes titles
+	if ax is None:
+		fig,ax = plt.subplots(1, figsize=(6,6)) # need constrained_layout=True to see axes titles
 	for idx, data in enumerate(dataList):
 		colorChar = colorChars[idx]
 		marker = sanMarkers[idx]
@@ -666,7 +693,7 @@ def plotMaskDensity(channel=2, csvFile=None, plotMean=True):
 	# each list is for san1/2/3/4
 	return superiorList, inferiorList, ax
 
-def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='median'):
+def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='median', plotForTalk=True, ax=None):
 	"""
 	plot mean dist of hcn4 to nearest vasculature
 
@@ -677,7 +704,7 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='median'):
 			add a histogram plot
 	"""
 
-	defaultPlotLayout()
+	defaultPlotLayout(plotForTalk=plotForTalk)
 
 	# csvFile is generated in aicsMyocyteDistToVasc.py
 	# it spans all of (san1 .. san2) and (head, mid,tail)
@@ -686,8 +713,8 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='median'):
 	#csvFile = '../hcn4-Distance-Result.csv'
 	df = pd.read_csv(csvFile)
 
-	sanList = ['SAN1', 'SAN2', 'SAN3', 'SAN4', 'SAN7']
-	sanMarkers = ['o', '^', 's', 'd', 'o']
+	sanList = ['SAN1', 'SAN2', 'SAN3', 'SAN4', 'SAN7', 'SAN8']
+	sanMarkers = ['o', '^', 's', 'd', '<', 'v']
 	hmtList = ['head', 'mid', 'tail']
 	hmtList = ['head', 'tail']
 	hmtListLabel = ['Superior', 'Inferior']
@@ -710,7 +737,8 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='median'):
 	#colorChars = ['k', 'k', 'k', 'k'] # one color for each of SAN1, SAN2, ...
 	colorChars = ["0.8"] * len(sanList) #, "0.8", "0.8", "0.8"] # one color for each of SAN1, SAN2, ...
 
-	fig,ax = plt.subplots(1, figsize=(6,6)) # need constrained_layout=True to see axes titles
+	if ax is None:
+		fig,ax = plt.subplots(1, figsize=(6,6)) # need constrained_layout=True to see axes titles
 	for idx, data in enumerate(dataList):
 		colorChar = colorChars[idx]
 		marker = sanMarkers[idx]
@@ -749,8 +777,11 @@ def plotMeanDist(csvFile = '../hcn4-Distance-Result.csv', statCol='median'):
 	printStats(superiorList)
 	printStats(inferiorList)
 	# alternative:{“two-sided”, “greater”, “less”},
-	stat, p01 = scipy.stats.wilcoxon(superiorList, inferiorList, alternative='less')
+	stat, p01 = scipy.stats.wilcoxon(superiorList, inferiorList, alternative='two-sided', mode='exact')
 	print('wilcoxon stat:', stat, 'p:', p01)
+
+	stat, pValue = scipy.stats.ttest_rel(superiorList, inferiorList)
+	print('paired ttest stat:', stat, 'pValue:', pValue)
 
 	return superiorList, inferiorList, ax
 

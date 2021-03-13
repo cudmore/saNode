@@ -153,44 +153,57 @@ if __name__ == '__main__':
 		aicsMyocyteDistToVasc(path)
 
 	# do batch
+	dataPath = '/media/cudmore/data1/'
 	if 1:
-		rootPath = '/media/cudmore/data1/'
+		channel = 2
 		# san1
 		pathList = [
-			f'{rootPath}san-density/SAN1/SAN1_head/aicsAnalysis/SAN1_head_ch2.tif',
-			f'{rootPath}san-density/SAN1/SAN1_mid/aicsAnalysis/SAN1_mid_ch2.tif',
-			f'{rootPath}san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif',
+			f'{dataPath}san-density/SAN1/SAN1_head/aicsAnalysis/SAN1_head_ch2.tif',
+			f'{dataPath}san-density/SAN1/SAN1_mid/aicsAnalysis/SAN1_mid_ch2.tif',
+			f'{dataPath}san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif',
 		]
 		# san2
 		pathList += [
-			f'{rootPath}san-density/SAN2/SAN2_head/aicsAnalysis/SAN2_head_ch2.tif',
-			f'{rootPath}san-density/SAN2/SAN2_mid/aicsAnalysis/SAN2_mid_ch2.tif',
-			f'{rootPath}san-density/SAN2/SAN2_tail/aicsAnalysis/SAN2_tail_ch2.tif',
+			f'{dataPath}san-density/SAN2/SAN2_head/aicsAnalysis/SAN2_head_ch2.tif',
+			f'{dataPath}san-density/SAN2/SAN2_mid/aicsAnalysis/SAN2_mid_ch2.tif',
+			f'{dataPath}san-density/SAN2/SAN2_tail/aicsAnalysis/SAN2_tail_ch2.tif',
 		]
 		# san3
 		pathList += [
-			f'{rootPath}san-density/SAN3/SAN3_head/aicsAnalysis/SAN3_head_ch2.tif',
-			f'{rootPath}san-density/SAN3/SAN3_mid/aicsAnalysis/SAN3_mid_ch2.tif',
-			f'{rootPath}san-density/SAN3/SAN3_tail/aicsAnalysis/SAN3_tail_ch2.tif',
+			f'{dataPath}san-density/SAN3/SAN3_head/aicsAnalysis/SAN3_head_ch2.tif',
+			f'{dataPath}san-density/SAN3/SAN3_mid/aicsAnalysis/SAN3_mid_ch2.tif',
+			f'{dataPath}san-density/SAN3/SAN3_tail/aicsAnalysis/SAN3_tail_ch2.tif',
 		]
 		# san4
 		pathList += [
-			f'{rootPath}san-density/SAN4/SAN4_head/aicsAnalysis/SAN4_head_ch2.tif',
-			f'{rootPath}san-density/SAN4/SAN4_mid/aicsAnalysis/SAN4_mid_ch2.tif',
-			f'{rootPath}san-density/SAN4/SAN4_tail/aicsAnalysis/SAN4_tail_ch2.tif',
+			f'{dataPath}san-density/SAN4/SAN4_head/aicsAnalysis/SAN4_head_ch2.tif',
+			f'{dataPath}san-density/SAN4/SAN4_mid/aicsAnalysis/SAN4_mid_ch2.tif',
+			f'{dataPath}san-density/SAN4/SAN4_tail/aicsAnalysis/SAN4_tail_ch2.tif',
 		]
 		# san7
 		# on reboot, my data drives keeps getting mounted on /media/cudmore/data1
 		pathList += [
 			# san7 _ch2
-			f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch2.tif',
-			f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch2.tif',
+			f'{dataPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch2.tif',
+			f'{dataPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch2.tif',
 
-			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch2.tif',
-			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch2.tif',
-			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch2.tif',
-			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch2.tif',
-			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch2.tif',
+			f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0008_ch2.tif',
+			f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0009_ch2.tif',
+			f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0010_ch2.tif',
+			f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0011_ch2.tif',
+
+			f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch2.tif',
+			f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch2.tif',
+			f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch2.tif',
+			f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch2.tif',
+			f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch2.tif',
+		]
+
+		# san8
+		pathList += [
+			f'{dataPath}san-density/SAN8/SAN8_head/aicsAnalysis/SAN8_head_ch{channel}.tif',
+			f'{dataPath}san-density/SAN8/SAN8_mid/aicsAnalysis/SAN8_mid_ch{channel}.tif',
+			f'{dataPath}san-density/SAN8/SAN8_tail/aicsAnalysis/SAN8_tail_ch{channel}.tif',
 		]
 
 		import pandas as pd

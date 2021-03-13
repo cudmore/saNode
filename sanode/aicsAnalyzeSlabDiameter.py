@@ -15,32 +15,65 @@ if __name__ == '__main__':
 
 	pathList = []
 
-	# SAN1
-	pathList += [
-				'/media/cudmore/data/san-density/SAN1/SAN1_head/aicsAnalysis/SAN1_head_ch2.tif',
-				'/media/cudmore/data/san-density/SAN1/SAN1_mid/aicsAnalysis/SAN1_mid_ch2.tif',
-				#'/media/cudmore/data/san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif',
-				]
+	rootPath = '/media/cudmore/data1/'
 
-	# SAN2
-	pathList += [
-				'/media/cudmore/data/san-density/SAN2/SAN2_head/aicsAnalysis/SAN2_head_ch2.tif',
-				'/media/cudmore/data/san-density/SAN2/SAN2_mid/aicsAnalysis/SAN2_mid_ch2.tif',
-				'/media/cudmore/data/san-density/SAN2/SAN2_tail/aicsAnalysis/SAN2_tail_ch2.tif',
-				]
+	if 0:
+		# SAN1
+		pathList += [
+					f'{rootPath}san-density/SAN1/SAN1_head/aicsAnalysis/SAN1_head_ch2.tif',
+					f'{rootPath}san-density/SAN1/SAN1_mid/aicsAnalysis/SAN1_mid_ch2.tif',
+					#f'{rootPath}san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif',
+					]
 
-	# SAN3
-	pathList += [
-				'/media/cudmore/data/san-density/SAN3/SAN3_head/aicsAnalysis/SAN3_head_ch2.tif',
-				'/media/cudmore/data/san-density/SAN3/SAN3_mid/aicsAnalysis/SAN3_mid_ch2.tif',
-				'/media/cudmore/data/san-density/SAN3/SAN3_tail/aicsAnalysis/SAN3_tail_ch2.tif',
-				]
-	# SAN4
-	pathList += [
-				'/media/cudmore/data/san-density/SAN4/SAN4_head/aicsAnalysis/SAN4_head_ch2.tif',
-				'/media/cudmore/data/san-density/SAN4/SAN4_mid/aicsAnalysis/SAN4_mid_ch2.tif',
-				'/media/cudmore/data/san-density/SAN4/SAN4_tail/aicsAnalysis/SAN4_tail_ch2.tif',
-				]
+		# SAN2
+		pathList += [
+					f'{rootPath}san-density/SAN2/SAN2_head/aicsAnalysis/SAN2_head_ch2.tif',
+					f'{rootPath}san-density/SAN2/SAN2_mid/aicsAnalysis/SAN2_mid_ch2.tif',
+					f'{rootPath}san-density/SAN2/SAN2_tail/aicsAnalysis/SAN2_tail_ch2.tif',
+					]
+
+		# SAN3
+		pathList += [
+					f'{rootPath}san-density/SAN3/SAN3_head/aicsAnalysis/SAN3_head_ch2.tif',
+					f'{rootPath}san-density/SAN3/SAN3_mid/aicsAnalysis/SAN3_mid_ch2.tif',
+					f'{rootPath}san-density/SAN3/SAN3_tail/aicsAnalysis/SAN3_tail_ch2.tif',
+					]
+		# SAN4
+		pathList += [
+					f'{rootPath}san-density/SAN4/SAN4_head/aicsAnalysis/SAN4_head_ch2.tif',
+					f'{rootPath}san-density/SAN4/SAN4_mid/aicsAnalysis/SAN4_mid_ch2.tif',
+					f'{rootPath}san-density/SAN4/SAN4_tail/aicsAnalysis/SAN4_tail_ch2.tif',
+					]
+
+	if 0:
+		pathList += [
+			# head
+			#f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0000_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch2.tif',
+
+			# mid
+			f'{rootPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0008_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0009_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0010_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0011_ch2.tif',
+
+			# tail
+			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch2.tif',
+			]
+
+	if 1:
+		# san8
+		channel = 2
+		pathList += [
+			f'{rootPath}san-density/SAN8/SAN8_head/aicsAnalysis/SAN8_head_ch{channel}.tif',
+			f'{rootPath}san-density/SAN8/SAN8_mid/aicsAnalysis/SAN8_mid_ch{channel}.tif',
+			f'{rootPath}san-density/SAN8/SAN8_tail/aicsAnalysis/SAN8_tail_ch{channel}.tif',
+		]
 
 	for path in pathList:
 

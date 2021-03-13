@@ -128,10 +128,49 @@ python aicsMakeSkel.py
 aicsAnalyzeSlabDiameter.py
 ```
 
+7) pool all distances into one big hcn4Dist.csv
+
+This subsamples a random 1e6 slab diameters
+
+```
+# see: aicsPlot.plot_hcn4_dist_hist(pathList, doPlot=False, verbose=False)
+# and see
+notebooks/hcn4Dist.ipynb
+```
+
+8) Analyze length of tracing (202101)
+
+The following outputs 2x files (pooled across all head/mid/tail san 1-4, 7, 8)
+
+Like this:
+	dfNodesOut.to_csv('nodes_db_20210125.csv')
+	dfEdgesOut.to_csv('edges_db.20210125.csv')
+
+```
+bimpy/analysis/bScrapeEdgesAndNodes.py
+```
+
+- I need (CONVERT LEN 2d/3d TO UM) then sum the length in each stack and then divide by volume.
+- Where volume is actually our top/bottom from aicsBlankSlices
+- Double check that bimpy tracing 'len 2d' and 'len 3d' are in um
+	IT IS NOT
+	NEITHER is diam2
+	BOTH ARE SET IN bVascularTracing._analyze()
+
+	make len and diam in um and go all the way back to
+		aicsAnalyzeSlabDiameter
+- Expand bScrapeEdgesAndNode to also make a short (per san-region table of TOTAL LENGTH, TOTAL VOLUME, LENGTH/VOLUME
+	)
+9)
+
 todo:
 0) add heuristic to reject slab that have their tails (start/stop of line) at different intensities
 1) calculate diameter of each slab in entire tracing
 2) plot these diameters as a histogram
+
+20210111
+1) calculate vessel length hist (and mean/median/std/sem)
+2) calculate total vessel length
 
 # Old
 

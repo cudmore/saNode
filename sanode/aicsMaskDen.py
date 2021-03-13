@@ -133,49 +133,66 @@ if __name__ == '__main__':
 
 	# do one
 	if 0:
-		path = '/media/cudmore/data/san-density/SAN3/SAN3_head/aicsAnalysis/SAN3_head_ch2.tif'
+		dataPath = '/media/cudmore/data1/'
+		path = f'{dataPath}san-density/SAN3/SAN3_head/aicsAnalysis/SAN3_head_ch2.tif'
 		aicsMaskDen(path)
 
 	# do batch
 	if 1:
-		channel = 2
+		dataPath = '/media/cudmore/data/'
+		channel = 1
 		# san1
 		pathList = [
-			f'/media/cudmore/data/san-density/SAN1/SAN1_head/aicsAnalysis/SAN1_head_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN1/SAN1_mid/aicsAnalysis/SAN1_mid_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif',
+			f'{dataPath}san-density/SAN1/SAN1_head/aicsAnalysis/SAN1_head_ch{channel}.tif',
+			f'{dataPath}san-density/SAN1/SAN1_mid/aicsAnalysis/SAN1_mid_ch{channel}.tif',
+			f'{dataPath}san-density/SAN1/SAN1_tail/aicsAnalysis/SAN1_tail_ch2.tif',
 		]
 		# san2
 		pathList += [
-			f'/media/cudmore/data/san-density/SAN2/SAN2_head/aicsAnalysis/SAN2_head_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN2/SAN2_mid/aicsAnalysis/SAN2_mid_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN2/SAN2_tail/aicsAnalysis/SAN2_tail_ch{channel}.tif',
+			f'{dataPath}san-density/SAN2/SAN2_head/aicsAnalysis/SAN2_head_ch{channel}.tif',
+			f'{dataPath}san-density/SAN2/SAN2_mid/aicsAnalysis/SAN2_mid_ch{channel}.tif',
+			f'{dataPath}san-density/SAN2/SAN2_tail/aicsAnalysis/SAN2_tail_ch{channel}.tif',
 		]
 		# san3
 		pathList += [
-			f'/media/cudmore/data/san-density/SAN3/SAN3_head/aicsAnalysis/SAN3_head_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN3/SAN3_mid/aicsAnalysis/SAN3_mid_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN3/SAN3_tail/aicsAnalysis/SAN3_tail_ch{channel}.tif',
+			f'{dataPath}san-density/SAN3/SAN3_head/aicsAnalysis/SAN3_head_ch{channel}.tif',
+			f'{dataPath}san-density/SAN3/SAN3_mid/aicsAnalysis/SAN3_mid_ch{channel}.tif',
+			f'{dataPath}san-density/SAN3/SAN3_tail/aicsAnalysis/SAN3_tail_ch{channel}.tif',
 		]
 		# san4
 		pathList += [
-			f'/media/cudmore/data/san-density/SAN4/SAN4_head/aicsAnalysis/SAN4_head_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN4/SAN4_mid/aicsAnalysis/SAN4_mid_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN4/SAN4_tail/aicsAnalysis/SAN4_tail_ch{channel}.tif',
+			f'{dataPath}san-density/SAN4/SAN4_head/aicsAnalysis/SAN4_head_ch{channel}.tif',
+			f'{dataPath}san-density/SAN4/SAN4_mid/aicsAnalysis/SAN4_mid_ch{channel}.tif',
+			f'{dataPath}san-density/SAN4/SAN4_tail/aicsAnalysis/SAN4_tail_ch{channel}.tif',
 		]
 
 		# san7
 		pathList += [
-			#f'/media/cudmore/data/san-density/SAN7/SAN7_head/aicsAnalysis/20201202__ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch{channel}.tif',
+			# head
+			#f'{dataPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0000_ch{channel}.tif',
+			f'{dataPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch{channel}.tif',
+			f'{dataPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch{channel}.tif',
 
-			f'/media/cudmore/data/san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch{channel}.tif',
-			f'/media/cudmore/data/san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch{channel}.tif',
+			# mid
+			f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0008_ch{channel}.tif',
+			f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0009_ch{channel}.tif',
+			f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0010_ch{channel}.tif',
+			f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0011_ch{channel}.tif',
 
+			# tail
+			f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch{channel}.tif',
+			f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch{channel}.tif',
+			f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch{channel}.tif',
+			f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch{channel}.tif',
+			f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch{channel}.tif',
+
+		]
+
+		# san8
+		pathList += [
+			f'{dataPath}san-density/SAN8/SAN8_head/aicsAnalysis/SAN8_head_ch{channel}.tif',
+			f'{dataPath}san-density/SAN8/SAN8_mid/aicsAnalysis/SAN8_mid_ch{channel}.tif',
+			f'{dataPath}san-density/SAN8/SAN8_tail/aicsAnalysis/SAN8_tail_ch{channel}.tif',
 		]
 
 		import pandas as pd
@@ -186,7 +203,8 @@ if __name__ == '__main__':
 			retDict = aicsMaskDen(path)
 			print(f'\n{idx+1} of {len(pathList)}')
 			if retDict is not None:
-				print(json.dumps(retDict, indent=2))
+				#print(json.dumps(retDict, indent=2))
+				print('  got good answer')
 			else:
 				print('  ERROR !!!!!!!!!!!!!!!!!!!!!!')
 

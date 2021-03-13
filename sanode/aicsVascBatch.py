@@ -54,16 +54,33 @@ if  __name__ == '__main__':
 	'''
 
 	# san 7
+	'''
 	pathList = [
-		'/media/cudmore/data/san-density/SAN7/SAN7_head/20201202__0000_ch2.tif',
-		'/media/cudmore/data/san-density/SAN7/SAN7_head/20201202__0001_ch2.tif',
-		'/media/cudmore/data/san-density/SAN7/SAN7_head/20201202__0002_ch2.tif',
+		# head
+		#'/media/cudmore/data/san-density/SAN7/SAN7_head/20201202__0000_ch2.tif',
+		#'/media/cudmore/data/san-density/SAN7/SAN7_head/20201202__0001_ch2.tif',
+		#'/media/cudmore/data/san-density/SAN7/SAN7_head/20201202__0002_ch2.tif',
 
-		'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0003_ch2.tif',
-		'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0004_ch2.tif',
-		'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0005_ch2.tif',
-		'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0006_ch2.tif',
-		'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0007_ch2.tif',
+		# mid
+		'/media/cudmore/data1/san-density/SAN7/SAN7_mid/20201202__0008_ch2.tif',
+		'/media/cudmore/data1/san-density/SAN7/SAN7_mid/20201202__0009_ch2.tif',
+		'/media/cudmore/data1/san-density/SAN7/SAN7_mid/20201202__0010_ch2.tif',
+		'/media/cudmore/data1/san-density/SAN7/SAN7_mid/20201202__0011_ch2.tif',
+
+		# tail
+		#'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0003_ch2.tif',
+		#'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0004_ch2.tif',
+		#'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0005_ch2.tif',
+		#'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0006_ch2.tif',
+		#'/media/cudmore/data/san-density/SAN7/SAN7_tail/20201202__0007_ch2.tif',
+	]
+	'''
+
+	# san8
+	pathList = [
+		'/media/cudmore/data1/san-density/SAN8/SAN8_head/SAN8_head_ch2.tif',
+		'/media/cudmore/data1/san-density/SAN8/SAN8_mid/SAN8_mid_ch2.tif',
+		'/media/cudmore/data1/san-density/SAN8/SAN8_tail/SAN8_tail_ch2.tif',
 	]
 
 	trimPercent = None

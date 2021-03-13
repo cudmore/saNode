@@ -30,9 +30,10 @@ if __name__ == '__main__':
 
 	# do batch
 	if 1:
-		channel = 2
+		channel = 2 # alwways make skel from channel 2
 		pathList = []
 
+		'''
 		# san1
 		sanNumber = 1
 		pathList += aicsBlankSlices.getCondList(sanNumber, channel)
@@ -44,6 +45,35 @@ if __name__ == '__main__':
 		pathList += aicsBlankSlices.getCondList(sanNumber, channel)
 		# san4
 		sanNumber = 4
+		pathList += aicsBlankSlices.getCondList(sanNumber, channel)
+		'''
+
+		'''
+		#sanNumber = 7
+		rootPath = '/media/cudmore/data1/'
+		pathList += [
+			# head
+			#f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0000_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch2.tif',
+
+			# mid
+			f'{rootPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0008_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0009_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0010_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0011_ch2.tif',
+
+			# tail
+			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch2.tif',
+			f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch2.tif',
+			]
+		'''
+
+		# san4
+		sanNumber = 8
 		pathList += aicsBlankSlices.getCondList(sanNumber, channel)
 
 		for idx, path in enumerate(pathList):

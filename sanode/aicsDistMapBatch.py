@@ -75,26 +75,54 @@ if __name__ == '__main__':
 
 	# san7
 	# on reboot, my data drives keeps getting mounted on /media/cudmore/data1
-	rootPath = '/media/cudmore/data1/'
+	dataPath = '/media/cudmore/data1/'
+
+	'''
 	pathList = [
 		# san7 _ch1
-		f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch1.tif',
-		f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch1.tif',
+		# head
+		f'{dataPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch1.tif',
+		f'{dataPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch1.tif',
 
-		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch1.tif',
-		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch1.tif',
-		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch1.tif',
-		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch1.tif',
-		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch1.tif',
+		# mid
+		f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0008_ch1.tif',
+		f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0009_ch1.tif',
+		f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0010_ch1.tif',
+		f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0011_ch1.tif',
+
+		# tail
+		f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch1.tif',
+		f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch1.tif',
+		f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch1.tif',
+		f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch1.tif',
+		f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch1.tif',
+
 		# san7 _ch2
-		f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch2.tif',
-		f'{rootPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch2.tif',
+		# head
+		f'{dataPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0001_ch2.tif',
+		f'{dataPath}san-density/SAN7/SAN7_head/aicsAnalysis/20201202__0002_ch2.tif',
 
-		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch2.tif',
-		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch2.tif',
-		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch2.tif',
-		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch2.tif',
-		f'{rootPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch2.tif',
+		# mid
+		f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0008_ch2.tif',
+		f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0009_ch2.tif',
+		f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0010_ch2.tif',
+		f'{dataPath}san-density/SAN7/SAN7_mid/aicsAnalysis/20201202__0011_ch2.tif',
+
+		# tail
+		f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0003_ch2.tif',
+		f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0004_ch2.tif',
+		f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0005_ch2.tif',
+		f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0006_ch2.tif',
+		f'{dataPath}san-density/SAN7/SAN7_tail/aicsAnalysis/20201202__0007_ch2.tif',
+	]
+	'''
+
+	# san8
+	channel = 2
+	pathList = [
+		f'{dataPath}san-density/SAN8/SAN8_head/aicsAnalysis/SAN8_head_ch{channel}.tif',
+		f'{dataPath}san-density/SAN8/SAN8_mid/aicsAnalysis/SAN8_mid_ch{channel}.tif',
+		f'{dataPath}san-density/SAN8/SAN8_tail/aicsAnalysis/SAN8_tail_ch{channel}.tif',
 	]
 
 	# remember, was NEED TO LIMIT top/bottom slice with aicsBlankSlices.getTopBottom(path)

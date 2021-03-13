@@ -103,6 +103,25 @@ keyStr = '20201202__0002'
 aicsBlankSlicesDict[keyStr] = {}
 aicsBlankSlicesDict[keyStr]['top'] = 15
 aicsBlankSlicesDict[keyStr]['bottom'] = 47
+
+# mid
+keyStr = '20201202__0008'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 15
+aicsBlankSlicesDict[keyStr]['bottom'] = 39
+keyStr = '20201202__0009'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 36
+aicsBlankSlicesDict[keyStr]['bottom'] = 61
+keyStr = '20201202__0010'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 16
+aicsBlankSlicesDict[keyStr]['bottom'] = 33
+keyStr = '20201202__0011'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 26
+aicsBlankSlicesDict[keyStr]['bottom'] = 51
+
 # tail
 keyStr = '20201202__0003'
 aicsBlankSlicesDict[keyStr] = {}
@@ -125,6 +144,23 @@ aicsBlankSlicesDict[keyStr] = {}
 aicsBlankSlicesDict[keyStr]['top'] = 20
 aicsBlankSlicesDict[keyStr]['bottom'] = 52
 
+#
+# san4
+# head
+keyStr = 'SAN8_head'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 21
+aicsBlankSlicesDict[keyStr]['bottom'] = 32
+# mid
+keyStr = 'SAN8_mid'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 19
+aicsBlankSlicesDict[keyStr]['bottom'] = 33
+# tail
+keyStr = 'SAN8_tail'
+aicsBlankSlicesDict[keyStr] = {}
+aicsBlankSlicesDict[keyStr]['top'] = 29
+aicsBlankSlicesDict[keyStr]['bottom'] = 39
 
 ##############################################################################
 import os
@@ -137,7 +173,7 @@ def getCondList(sanNumber, channel):
 	sanNumber: from (1,2,3,4)
 	channel: from (1,2)
 	"""
-	gBasePath = '/media/cudmore/data/san-density'
+	gBasePath = '/media/cudmore/data1/san-density'
 	sanStr = f'SAN{sanNumber}'
 	channelStr = f'_ch{channel}'
 	pathList = []
