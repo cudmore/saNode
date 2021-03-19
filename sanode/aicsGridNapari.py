@@ -6,6 +6,10 @@ View a grid of Tiff files in Napari
 Keyboard:
 	Shift-L: Turn count labels on/off (if on then can be slow)
 
+20210313
+	Making so we can load from numbered folders
+	file '20200901__A01_G001_0010_ECSubtract_Z000'
+	is single slices in a folder'10'
 """
 
 import os
@@ -184,7 +188,8 @@ def myGetBlock(aicsGridParam, channel, finalPostfixStr, getAll=False, smallDict=
 
 	print('aicsGridNapari.myGetBlock() channel:', channel)
 
-	dataPath = aicsGridParam['dataPath'] # used to save subset with smallDict
+	# abb 20210313 removed
+	#dataPath = aicsGridParam['dataPath'] # used to save subset with smallDict
 	masterFilePath = aicsGridParam['masterFilePath']
 	gridShape = aicsGridParam['gridShape']
 	nRow = gridShape[0]
@@ -350,6 +355,8 @@ def myGetBlock(aicsGridParam, channel, finalPostfixStr, getAll=False, smallDict=
 
 		smallMainFolder = smallDict['mainFolder'] # folder to put all results in
 		smallSaveName = smallDict['saveName']
+
+		dataPath = aicsGridParam['dataPath'] # used to save subset with smallDict
 
 		# main folder like SAN4, SAN3, ...
 		smallPath = os.path.join(dataPath, smallMainFolder) # new folder is 'smallMainFolder'
@@ -645,34 +652,21 @@ def aicsGridNapari(aicsGridParam, smallDict=None):
 		#
 		print('  Done ... Napari viewer should be open ...')
 
-if __name__ == '__main__':
-
-
-	masterFilePath = 'aicsBatch/20200717_cell_db.csv'
-	path = '/Volumes/ThreeRed/nathan/20200717/aicsAnalysis0'
-	path = '/Users/cudmore/Desktop/aicsAnalysis0'
-	prefixStr = '20200717__A01_G001_'
-	commonShape = (88,740,740)
-	commonVoxelSize = (1, 0.3977476, 0.3977476)
-	channelList = [1,2]
-	gridShape = (11,4)
-	finalPostfixList = ['', '_mask', '_labeled']
-	#doUseInclude = True
-	#doUseFirstLast = True
-
-	# raw data ... WILL NOT BE TRIMMED BY OVERLAP
-	'''
-	masterFilePath = ''
-	path = '/Volumes/ThreeRed/nathan/20200717'
-	commonShape = (88,800,800)
-	commonVoxelSize = (1, 0.3977476, 0.3977476)
-	channelList = [1,2]
-	gridShape = (11,4)
-	finalPostfixList = [''] # '' is no postfix, e.g. raw tiff like _ch1.tif and _ch2.tif
-	'''
+def gridFromImarisMask():
+	# 20210313
+	path = '/Users/cudmore/data/Thresholded Vessels Tifs'
+	prefixStr = '20200901__A01_G001_' #'20200724__A01_G001_'
+	commonShape = (104,640,640) # if trimPercent then AFTER trimming
+	commonVoxelSize = (1, 0.4971842, 0.4971842)
+	channelList = ['no channel'] #[1,2]
+	gridShape = (12,6) #(7,5) # (11, 5)
+	finalPostfixList = ['_mask'] #['', '_mask', '_labeled'] # '' is no postfix, e.g. raw tiff like _ch1.tif and _ch2.tif
+	trimPercent = None # aicsAnalysis is already trimmed
+	doUseInclude = False # when reading from csv with first/last slice
+	doUseFirstLast = False # when reading from csv with first/last slice
 
 	aicsGridParam = OrderedDict()
-	aicsGridParam['masterFilePath'] = masterFilePath
+	aicsGridParam['masterFilePath'] = None #masterFilePath
 	aicsGridParam['path'] = path
 	aicsGridParam['prefixStr'] = prefixStr
 	aicsGridParam['commonShape'] =  commonShape# shape of each stack in aicsAnalysis (already trimmed)
@@ -680,11 +674,54 @@ if __name__ == '__main__':
 	aicsGridParam['channelList'] = channelList
 	aicsGridParam['gridShape'] = gridShape
 	aicsGridParam['finalPostfixList'] = finalPostfixList
-	aicsGridParam['trimPercent'] = None
-	#aicsGridParam['doUseInclude'] = doUseInclude
-	#aicsGridParam['doUseFirstLast'] = doUseFirstLast
+	aicsGridParam['trimPercent'] = trimPercent
+	aicsGridParam['doUseInclude'] = doUseInclude
+	aicsGridParam['doUseInclude'] = doUseInclude
+	aicsGridParam['doUseFirstLast'] = doUseFirstLast
 
 	aicsGridNapari(aicsGridParam)
+
+def old():
+	# moved from main 20210313 working on xxx
+	if 0:
+		masterFilePath = 'aicsBatch/20200717_cell_db.csv'
+		path = '/Volumes/ThreeRed/nathan/20200717/aicsAnalysis0'
+		path = '/Users/cudmore/Desktop/aicsAnalysis0'
+		prefixStr = '20200717__A01_G001_'
+		commonShape = (88,740,740)
+		commonVoxelSize = (1, 0.3977476, 0.3977476)
+		channelList = [1,2]
+		gridShape = (11,4)
+		finalPostfixList = ['', '_mask', '_labeled']
+		#doUseInclude = True
+		#doUseFirstLast = True
+
+		# raw data ... WILL NOT BE TRIMMED BY OVERLAP
+		'''
+		masterFilePath = ''
+		path = '/Volumes/ThreeRed/nathan/20200717'
+		commonShape = (88,800,800)
+		commonVoxelSize = (1, 0.3977476, 0.3977476)
+		channelList = [1,2]
+		gridShape = (11,4)
+		finalPostfixList = [''] # '' is no postfix, e.g. raw tiff like _ch1.tif and _ch2.tif
+		'''
+
+		aicsGridParam = OrderedDict()
+		aicsGridParam['masterFilePath'] = masterFilePath
+		aicsGridParam['path'] = path
+		aicsGridParam['prefixStr'] = prefixStr
+		aicsGridParam['commonShape'] =  commonShape# shape of each stack in aicsAnalysis (already trimmed)
+		aicsGridParam['commonVoxelSize'] = commonVoxelSize
+		aicsGridParam['channelList'] = channelList
+		aicsGridParam['gridShape'] = gridShape
+		aicsGridParam['finalPostfixList'] = finalPostfixList
+		aicsGridParam['trimPercent'] = None
+		#aicsGridParam['doUseInclude'] = doUseInclude
+		#aicsGridParam['doUseFirstLast'] = doUseFirstLast
+
+
+		aicsGridNapari(aicsGridParam)
 
 	#
 	# testing
@@ -695,3 +732,7 @@ if __name__ == '__main__':
 		print('tmpFileList:', len(tmpFileList))
 		for idx, file in enumerate(tmpFileList):
 			print(idx, file)
+
+if __name__ == '__main__':
+
+	gridFromImarisMask()
