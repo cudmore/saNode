@@ -6,12 +6,26 @@ import numpy as np
 
 import tifffile
 
-def makeDensityMap(path, chunkSize):
+def _printStackParams(name, myStack):
+	#print('  ', name, type(myStack), myStack.shape, myStack.dtype, 'dtype.char:', myStack.dtype.char, 'min:', np.min(myStack), 'max:', np.max(myStack))
+	print('  .', name, myStack.shape, 'dtype:', myStack.dtype,
+				'dtype.char:', myStack.dtype.char,
+		)
+	print('    ', 'min:', np.nanmin(myStack),
+		'max:', np.nanmax(myStack),
+		'mean:', np.nanmean(myStack))
+
+def makeDensityMap(path, chunkSize, thisStat='sum', doVolumeFraction=True, ignore0=False):
 	"""
 	path: (str) full path to a big .tif file
 		should be a binary mask (not raw data)
 	chunkSize: (int) specifies the width/height in pixels
 		for each output pixel in heatmap
+	thisStat: ('sum', 'mean')
+	ignore0: True for edt, we had to set 'missing values' to 0
+
+	for some reason 'san4-top-hcn4_big_3d_edt.tif' had 6-8 pixels maxed out????
+	set anything > 300 um to nan
 
 	returns:
 		tifData
@@ -19,10 +33,22 @@ def makeDensityMap(path, chunkSize):
 	"""
 	print('makeDensityMap() path:', path)
 	print('  chunkSize:', chunkSize)
+	print('  thisStat:', thisStat)
+	print('  doVolumeFraction:', doVolumeFraction)
+	print('  ignore0:', ignore0)
 
 	tifData = tifffile.imread(path)
 	tifShape = tifData.shape
 	print('  tifData.shape:', tifData.shape)
+
+	if ignore0:
+		tifData = np.where(tifData==0, np.nan, tifData)
+
+	# now done in nathanDistanceMap1.py
+	#if os.path.split(path)[1] == 'san4-top-hcn4_big_3d_edt.tif':
+	#	errorDist = 25
+	#	print('*** removing edt distances >', errorDist)
+	#	tifData = np.where(tifData>errorDist, np.nan, tifData)
 
 	if len(tifShape) == 2:
 		tifRows = tifShape[0]
@@ -53,29 +79,44 @@ def makeDensityMap(path, chunkSize):
 				chunkData = tifData[:, startRow:stopRow, startCol:stopCol]
 
 			# sum pixels in mask within current chunk
-			sumPixels = np.sum(chunkData)
-			#print('row:', row, 'col:', col, 'sum:', sumPixels)
+			if thisStat == 'sum':
+				sumPixels = np.nansum(chunkData)
+			elif thisStat == 'mean':
+				sumPixels = np.nanmean(chunkData)
+			if not doVolumeFraction and sumPixels > 300:
+				print('   *** warning: got a BIG distance row:', row, 'col:', col, 'sum:', sumPixels)
 			if sumPixels > 2**32:
 				print('  *** warning: overrun at row:', row, 'col:', col, 'sumPixels:', sumPixels)
 
 			# we need to calculate the % of mask pixels out of total # pixels
 			# normalize to number of pixels in 2d/3d chunk
 			# here we are not really using pixels in chunk, causes sumPixels to become super small
-			if len(tifShape) == 2:
-				pixelsInChunk = tifRows * tifCols
-				volumeFraction = sumPixels / pixelsInChunk
-			elif len(tifShape) == 3:
-				pixelsInChunk = tifRows * tifCols * tifSlices
-				volumeFraction = sumPixels / pixelsInChunk
-
+			if doVolumeFraction:
+				# for binary mask using np.nansum()
+				if len(tifShape) == 2:
+					pixelsInChunk = tifRows * tifCols
+					volumeFraction = sumPixels / pixelsInChunk
+				elif len(tifShape) == 3:
+					pixelsInChunk = tifRows * tifCols * tifSlices
+					volumeFraction = sumPixels / pixelsInChunk
+			else:
+				# for distance map using np.nanmean()
+				volumeFraction = sumPixels
 			#print('row:', row, 'col:', col, 'pixelsInChunk:', pixelsInChunk, 'volumeFraction:', volumeFraction)
 
 			heatMapOut[row,col] = volumeFraction
 
 	return tifData, heatMapOut
 
-def run():
-	dataPath = '/Users/cudmore/data/nathan'
+def run_volume_fraction():
+	"""
+    original shape: (86, 640, 640)
+    final shape: (86, 544, 544)
+
+	IGNORE: raw (640,640) after 0.15% trim is (592,592)
+	"""
+	#dataPath = '/Users/cudmore/data/nathan'
+	dataPath = '/media/cudmore/data/heat-map/san4-raw'
 	pathList = []
 	if 0:
 		# san4 top/bottom cd31
@@ -83,34 +124,75 @@ def run():
 			f'{dataPath}/san4-top/san4-top-cd31/san4-top-cd31_big_3d.tif',
 			f'{dataPath}/san4-bottom/san4-bottom-cd31/san4-bottom-cd31_big_3d.tif'
 			]
-	if 1:
+		thisStat = 'sum'
+		doVolumeFraction = True
+		ignore0 = False
+	if 0:
 		# san4 top/bottom hcn4
 		pathList = [
 			f'{dataPath}/san4-top/san4-top-hcn4/san4-top-hcn4_big_3d.tif',
 			f'{dataPath}/san4-bottom/san4-bottom-hcn4/san4-bottom-hcn4_big_3d.tif'
 			]
+		thisStat = 'sum'
+		doVolumeFraction = True
+		ignore0 = False
 
-	chunkSize = 320 # 160 # pixels
+	if 1:
+		# hcn4 dist map
+		# REQUIRES nathanDistanceMap1.py OUTPUT !!!!!
+		# REMEMBER TO IGNORE DISTANCE == 0
+		titleStr = 'san4 hcn4 dist to vasc'
+		pathList = [
+			f'{dataPath}/san4-top/san4-top-hcn4/san4-top-hcn4_big_3d_edt.tif',
+			f'{dataPath}/san4-bottom/san4-bottom-hcn4/san4-bottom-hcn4_big_3d_edt.tif'
+			]
+		thisStat = 'mean'
+		doVolumeFraction = False
+		ignore0 = True
+
+	# raw (640,640) after 0.15% trim is (592,592)
+	#chunkSize = 296
+	# not trimmed
+	#chunkSize = 320 # 160 # pixels
+	# new trimming 15% from left/top/right/bottom
+	#	original shape: (86, 640, 640)
+    #	final shape: (86, 544, 544)
+	chunkSize = int(544/2)
+
+	print('run_volume_fraction()')
+	print('pathList:', pathList)
+	print('  thisStat:', thisStat)
+	print('  doVolumeFraction:', doVolumeFraction)
+	print('  chunkSize:', chunkSize)
+
 	tifData = [None] * len(pathList) # from makeDensityMap
 	volumeFraction = [None] * len(pathList) # from makeDensityMap
 	volumeFractionNorm = [None] * len(pathList) # create this
 	for idx, path in enumerate(pathList):
 		#print('path:', path)
-		tifData[idx], volumeFraction[idx] = makeDensityMap(path, chunkSize)
+		tifData[idx], volumeFraction[idx] = makeDensityMap(path, chunkSize,
+									thisStat=thisStat, doVolumeFraction=doVolumeFraction, ignore0=ignore0)
+		#_printStackParams(f'{idx}  tifData', tifData[idx])
+		#_printStackParams(f'{idx}  volumeFraction', volumeFraction[idx])
 
 	# find max across all volumeFraction heatmaps
 	theMax = 0
 	for idx, vf in enumerate(volumeFraction):
-		thisMax = np.max(vf)
+		thisMax = np.nanmax(vf)
 		if thisMax > theMax:
 			theMax = thisMax
 
 		fileName = os.path.split(pathList[idx])[1]
 		print(f'{idx} {fileName} max: {thisMax}')
+		_printStackParams('  ', vf)
 
 	# normalize all vf to the same max (theMax)
 	for idx, vf in enumerate(volumeFraction):
+		fileName = os.path.split(pathList[idx])[1]
+		print(f'{idx} {fileName} normalize to {theMax}')
+		_printStackParams('  before vf', vf)
 		volumeFractionNorm[idx] = vf / theMax
+		_printStackParams('  after volumeFractionNorm', volumeFractionNorm[idx])
 
 	#
 	# save both the (original, norm) heat map
@@ -119,131 +201,63 @@ def run():
 		#
 		savePath = tmpPath + '_cs' + str(chunkSize) + '_heatmap.tif'
 		print('  saving heat map as:', savePath)
+		_printStackParams('  vf', volumeFraction[idx])
 		tifffile.imwrite(savePath, volumeFraction[idx])
 		#
 		saveNormPath = tmpPath + '_cs' + str(chunkSize) + '_heatmap_norm.tif'
 		print('  saving norm heat map as:', saveNormPath)
+		_printStackParams('  vf', volumeFractionNorm[idx])
 		tifffile.imwrite(saveNormPath, volumeFractionNorm[idx])
+
+		#
+		# print raw heat map
+		mTmp, nTmp = volumeFraction[idx].shape
+		for i in range(mTmp):
+			rowStr = ''
+			for j in range(nTmp):
+				rowStr += str(volumeFraction[idx][i,j]) + '\t'
+			print(rowStr + '\n')
 
 	#
 	# plot
 	import matplotlib.pyplot as plt
 
-	n = len(volumeFraction) * 2 # 2 plots for each original (max tif, norm vf)
+	print('plotting ...')
+	cmap = 'inferno' #'Greens' # 'inferno'
+	numPerIdx = 3
+	n = len(volumeFraction) * numPerIdx # 2 plots for each original (max tif, norm vf)
 	fig, axs = plt.subplots(1, n, sharex=False)
 	for idx, vfn in enumerate(volumeFractionNorm):
+		vf = volumeFraction[idx]
 		tif = tifData[idx]
-		tifMaxProject = np.max(tif, axis=0)
+		tifMaxProject = np.nanmax(tif, axis=0)
 
-		colIdx = idx * 2
+		colIdx = idx * numPerIdx
 
-		im0 = axs[colIdx].imshow(tifMaxProject, vmin=0, vmax=1)
+		# was for mask
+		#im0 = axs[colIdx].imshow(tifMaxProject, vmin=0, vmax=1)
+		im0 = axs[colIdx].imshow(tifMaxProject, cmap=cmap)
 		im0.axes.get_xaxis().set_visible(False)
 		im0.axes.get_yaxis().set_visible(False)
+		axs[colIdx].title.set_text('tifMaxProject')
 
-		im1 = axs[colIdx+1].imshow(vfn, vmin=0, vmax=1)
+		im1 = axs[colIdx+1].imshow(vf, vmin=0, vmax=theMax, cmap=cmap) # for edt, this has actual um distances
 		im1.axes.get_xaxis().set_visible(False)
 		im1.axes.get_yaxis().set_visible(False)
+		axs[colIdx+1].title.set_text('vf')
+
+		im2 = axs[colIdx+2].imshow(vfn, vmin=0, vmax=1, cmap=cmap)
+		im2.axes.get_xaxis().set_visible(False)
+		im2.axes.get_yaxis().set_visible(False)
+		axs[colIdx+2].title.set_text('vfn')
 
 	#plt.colorbar(im2,fraction=0.046, pad=0.04)
 
 	#
 	plt.show()
 
-def myPlot():
-	# plot heat maps from tif
-
-	if 0:
-		titleStr = 'cd31'
-		san4Top = '/Users/cudmore/data/nathan/san4-top/san4-top-cd31/san4-top-cd31_big_3d_cs320_heatmap_norm.tif'
-		san4Bottom = '/Users/cudmore/data/nathan/san4-bottom/san4-bottom-cd31/san4-bottom-cd31_big_3d_cs320_heatmap_norm.tif'
-
-	if 1:
-		titleStr = 'hcn4'
-		san4Top = '/Users/cudmore/data/nathan/san4-top/san4-top-hcn4/san4-top-hcn4_big_3d_cs320_heatmap_norm.tif'
-		san4Bottom = '/Users/cudmore/data/nathan/san4-bottom/san4-bottom-hcn4/san4-bottom-hcn4_big_3d_cs320_heatmap_norm.tif'
-
-	topTif = tifffile.imread(san4Top)
-	bottomTif = tifffile.imread(san4Bottom)
-
-	# mask out 0 values so they are displayed as transparent (white)
-	topTif = np.ma.masked_where(topTif == 0, topTif)
-	bottomTif = np.ma.masked_where(bottomTif == 0, bottomTif)
-
-	import matplotlib.pyplot as plt
-	fig, axs = plt.subplots(1, 3, sharey=True)
-	fig.suptitle(titleStr)
-
-	cmap = 'inferno' #'Greens' # 'inferno'
-	vmin = 0.000
-	vmax = 1
-
-	#fig, axs = plt.subplots(1, 2, sharex=False)
-	im0 = axs[0].imshow(topTif, vmin=vmin, vmax=vmax, cmap=cmap)
-	#im0.set_clim([vmin, vmax])
-	im0.axes.get_xaxis().set_visible(False)
-	im0.axes.get_yaxis().set_visible(False)
-	axs[0].spines['left'].set_visible(False)
-	axs[0].spines['top'].set_visible(False)
-	axs[0].spines['right'].set_visible(False)
-	axs[0].spines['bottom'].set_visible(False)
-
-	im1 = axs[2].imshow(bottomTif, vmin=vmin, vmax=vmax, cmap=cmap)
-	im1.axes.get_xaxis().set_visible(False)
-	im1.axes.get_yaxis().set_visible(False)
-	axs[2].spines['left'].set_visible(False)
-	axs[2].spines['top'].set_visible(False)
-	axs[2].spines['right'].set_visible(False)
-	axs[2].spines['bottom'].set_visible(False)
-
-	#
-	# make 1d of each row going from top to bottom
-	m1,n = topTif.shape
-	print('top m1:', m1)
-	yDensityLineTop = range(m1)
-	densityLineTop = np.zeros(m1)
-	topMean = np.mean(topTif)
-	for i in range(m1):
-		# top
-		oneRowMax = np.max(topTif[i,:])
-		oneRowSum = np.sum(topTif[i,:])
-		oneRowMean = np.mean(topTif[i,:])
-		oneRowMean = (oneRowMean-topMean) / topMean
-		densityLineTop[i] = oneRowMax
-	m2,n = bottomTif.shape
-	print('bottom m2:', m2)
-	yDensityLineBottom = range(m1+m2)
-	densityLineBottom = np.zeros(m1+m2) * np.nan
-	bottomMean = np.mean(bottomTif)
-	for i in range(m2):
-		# bottom
-		oneRowMax = np.max(bottomTif[i,:])
-		oneRowSum = np.sum(bottomTif[i,:])
-		oneRowMean = np.mean(bottomTif[i,:])
-		oneRowMean = (oneRowMean-topMean) / topMean #USING TOP MEAN
-		densityLineBottom[m1+i] = oneRowMax
-	#
-	#axs = [axs]
-	axs[1].scatter(densityLineTop, yDensityLineTop,
-					vmin=vmin,
-					vmax=vmax,
-					c=densityLineTop, cmap=cmap)
-	axs[1].scatter(densityLineBottom, yDensityLineBottom,
-					vmin=vmin,
-					vmax=vmax,
-					c=densityLineBottom, cmap=cmap)
-	#axs[1].invert_yaxis()
-	axs[1].get_yaxis().set_visible(False)
-	axs[1].spines['left'].set_visible(False)
-	axs[1].spines['top'].set_visible(False)
-	axs[1].spines['right'].set_visible(False)
-
-	cax = fig.add_axes([0.9, 0.5, 0.03, 0.38]) # [x, y, w, h]
-	#plt.colorbar(im0,fraction=0.046, pad=0.04, cax=axs[2])
-	plt.colorbar(im0,cax=cax)
-
-	plt.show()
 
 if __name__ == '__main__':
-	#run()
-	myPlot()
+	run_volume_fraction()
+	# to plot output, use nathanHeatMapPlot.py
+	#myPlot()

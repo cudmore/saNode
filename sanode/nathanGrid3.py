@@ -1,5 +1,12 @@
 """
-Script to process a folder of ch1/ch2 Tiff files into a visual grid
+Script to process a folder of folders with ch1/ch2 Tiff files into a visual grid
+grid is usually from Olympus FV3000
+
+raw stacks are 640 x 640
+trimPercent = 15
+gives trimmed size
+
+raw (640,640) after 0.15% trim is (592,592)
 """
 
 import os, sys, math, glob
@@ -10,7 +17,7 @@ import matplotlib.pyplot as plt
 
 def myMakeNumPy(tifDataList, fileIdxMatrix, nRow, nCol, numSlices=None, folderPath=None):
 	"""
-	make a big numpy aray from list of max tif
+	make a big numpy aray from list of tif (source can be either 2d max-project or original 3d stacks)
 
 	tifDataList: can be list of 2d or 3d aray
 	fileIdxList: gives us the ordering into tifDataList[idx]
@@ -68,7 +75,7 @@ def myMakeNumPy(tifDataList, fileIdxMatrix, nRow, nCol, numSlices=None, folderPa
 						bigStopSlice = bigNumPy.shape[0]
 						stopSlice = tifData.shape[0]
 						if bigStopSlice != stopSlice:
-							print('  myMakeNumPy() warning: slice mistmatch at rowIdx:', rowIdx, 'colIdx:', colIdx)
+							print('  WARNING: myMakeNumPy() slice mistmatch at rowIdx:', rowIdx, 'colIdx:', colIdx)
 							print('    bigNumPy:', bigNumPy.shape, 'tifData:', tifData.shape)
 						stopSlice = min(bigStopSlice, stopSlice)
 						bigNumPy[startSlice:stopSlice,startRow:stopRow, startCol:stopCol] = tifData
@@ -90,12 +97,44 @@ def myMakeNumPy(tifDataList, fileIdxMatrix, nRow, nCol, numSlices=None, folderPa
 	print('saving _big.tif as:', bigNumPy.dtype, 'to:', savePath)
 	tifffile.imsave(savePath, bigNumPy)
 
-def myMakeGrid_ImarisMask(path, prefixStr, channel, nRow, nCol):
+##############################################################
+def trimStack(stackData, trimPercent, verbose=True):
+	""""
+	20210322, now trimming left/top/right/bottom
+	previously was only trimming bottom/right
+	"""
+	# from Olympus, usually trimPercent = 15
+	trimPixels = math.floor( trimPercent * stackData.shape[1] / 100 ) # ASSUMING STACKS ARE SQUARE
+	trimPixels = math.floor(trimPixels / 2)
+	if trimPixels > 0:
+		if verbose: print('    trimming', trimPixels, 'left/top/right/bottom pixels')
+		if verbose: print('    original shape:', stackData.shape)
+		thisHeight = stackData.shape[1] - trimPixels
+		thisWidth = stackData.shape[2] - trimPixels
+		#stackData = stackData[:, 0:thisHeight, 0:thisWidth]
+		stackData = stackData[:, trimPixels:thisHeight, trimPixels:thisWidth]
+		if verbose: print('    final shape:', stackData.shape)
+	else:
+		print('    WARNING: trimStack() not trimming lower/right x/y !!!')
+
+	return stackData
+
+def myMakeGrid_ImarisMask(path, prefixStr, channel, nRow, nCol, trimPercent):
 	"""
 	load output of imaris masks
 	load from folders of single plane .tif
 
-	channel: can be None
+	parameters:
+		path:
+		prefixStr: not used
+		channel: (None, 1, 2)
+		nRow,nCol: size of the original grid. We assume it is snaked
+				giving us folder order like
+				[1,2,3,4]
+				[8,7,6,5]
+				trimPercent: percent of pixels to trim from lower right of each stack
+				[...]
+		trimPercent: None or percent to trim, Olympus is usually trimPercent = 0.15
 	"""
 	print(f'myMakeGrid_ImarisMask() loading {nRow*nCol} from nRow:{nRow} x nCol:{nCol} ... please wait ...')
 	verbose = True
@@ -134,6 +173,8 @@ def myMakeGrid_ImarisMask(path, prefixStr, channel, nRow, nCol):
 			tmp = sorted(tmp)
 			#print(tmp)
 			stackData = tifffile.imread(tmp)
+			if trimPercent is not None:
+				stackData = trimStack(stackData, trimPercent)
 			tifDataList.append(stackData)
 
 			print('  ', numFoldersLoaded, 'folderName:', folderName,
@@ -278,7 +319,11 @@ def plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList,
 
 	print('done')
 
-def run():
+def _run():
+	"""
+	20210321 this was for loading original stack .tif files
+	replaced by fromImarisMask to load from folders of .tif
+	"""
 	# either this
 	if 0:
 		folderPath = '/Users/cudmore/box/data/nathan/20200518'
@@ -335,44 +380,29 @@ def run():
 	hSpace = -0.1
 	plotGrid(folderPath, nRow, nCol, fileNameList, fileIdxList, tifMaxList, plotLabels, wSpace, hSpace)
 
-def fromImarisMask():
+def fromImarisMask(folderPath, nRow, nCol, trimPercent=None):
 	"""
-	take a folder of oir numbered folders
-	"""
+	take a folder of oir numbered folders and make a big tif grid
+
+	parameters:
+		folderPath: full path to folder (usually numbered) that contains a long list of single image .tif
+		nRow/nCol: number of .tif files acquired on Olympus Fv3000
+		trimPercent: Usually 15 %, can be None for no trimming
 
 	# folder of numbered folders for one channel
 	# downloaded from box
+	"""
+
+	prefixStr = None
+	channel = 1
 
 	#
-	#san4 upper
-	if 0:
-		# vessels
-		#folderPath = '/Users/cudmore/data/nathan/san4-top/san4-top-cd31'
-		# hcn4
-		folderPath = '/Users/cudmore/data/nathan/san4-top/san4-top-hcn4'
-		prefixStr = None # files are in numbered folder #'20200914__A01_G001_' # 20200901__A01_G001_0011_ECSubtract_Z000.tif
-		nRow = 12
-		nCol = 6
-		# specify the channel
-		channel = 1
-		#channel = 2 # does not look so good for CD-31 because of endocardium
-
-	#san4 lower
-	if 1:
-		# vessels slices=86
-		#folderPath = '/Users/cudmore/data/nathan/san4-bottom/san4-bottom-cd31'
-		# hcn4
-		folderPath = '/Users/cudmore/data/nathan/san4-bottom/san4-bottom-hcn4'
-		prefixStr = None # files are in numbered folder #'20200914__A01_G001_' # 20200901__A01_G001_0011_ECSubtract_Z000.tif
-		nRow = 14
-		nCol = 6
-		# specify the channel
-		channel = 1
-		#channel = 2 # does not look so good for CD-31 because of endocardium
-
-# myMakeGrid is defined above
-	print('fromImarisMAsk() folderPath:', folderPath)
-	tifDataList, tifMaxList, fileNameList, fileIdxMatrix, sliceNumMatrix= myMakeGrid_ImarisMask(folderPath, prefixStr, channel, nRow, nCol)
+	# myMakeGrid is defined above
+	#trimPercent = 15
+	#trimPercent = None
+	print('fromImarisMask() folderPath:', folderPath)
+	tifDataList, tifMaxList, fileNameList, fileIdxMatrix, sliceNumMatrix= myMakeGrid_ImarisMask(
+										folderPath, prefixStr, channel, nRow, nCol, trimPercent)
 
 	print('fileIdxMatrix:')
 	print(fileIdxMatrix)
@@ -402,5 +432,37 @@ def fromImarisMask():
 
 if __name__ == '__main__':
 
-	#run()
-	fromImarisMask()
+	#dataPath = '/media/cudmore/data/heat-map/san4-raw'
+	dataPath = '/media/cudmore/data/heat-map/san4-raw'
+
+	trimPercent = 15
+
+	#
+	#san4 upper/top
+	if 1:
+		# vessels
+		folderPath = f'{dataPath}/san4-top/san4-top-cd31'
+		# hcn4
+		#folderPath = f'{dataPath}/san4-top/san4-top-hcn4'
+		prefixStr = None # files are in numbered folder #'20200914__A01_G001_' # 20200901__A01_G001_0011_ECSubtract_Z000.tif
+		nRow = 12
+		nCol = 6
+		# specify the channel
+		channel = 1
+		#channel = 2 # does not look so good for CD-31 because of endocardium
+
+	#san4 lower/bottom
+	if 0:
+		# vessels slices=86
+		#folderPath = f'{dataPath}/san4-bottom/san4-bottom-cd31'
+		# hcn4
+		folderPath = f'{dataPath}/san4-bottom/san4-bottom-hcn4'
+		prefixStr = None # files are in numbered folder #'20200914__A01_G001_' # 20200901__A01_G001_0011_ECSubtract_Z000.tif
+		nRow = 14
+		nCol = 6
+		# specify the channel
+		channel = 1
+		#channel = 2 # does not look so good for CD-31 because of endocardium
+
+	#
+	fromImarisMask(folderPath, nRow, nCol, trimPercent)

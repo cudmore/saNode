@@ -153,7 +153,7 @@ if __name__ == '__main__':
 		aicsMyocyteDistToVasc(path)
 
 	# do batch
-	dataPath = '/media/cudmore/data1/'
+	dataPath = '/media/cudmore/data/'
 	if 1:
 		channel = 2
 		# san1
@@ -214,7 +214,8 @@ if __name__ == '__main__':
 			#print(json.dumps(thresholdDict, indent=2))
 
 			# save to csv with pandas
-			csvPath = '/home/cudmore/Sites/saNode/hcn4-Distance-Result.csv'
+			csvPath = '/home/cudmore/Sites/saNode/hcn4-Distance-Result-20210324.csv'
 			df = pd.DataFrame(thresholdDict, index=[pandasIdx])
 			#doHeader = True #pandasIdx==0
+			print('saving and appending to csvPath:', csvPath)
 			df.to_csv(csvPath, header=pandasIdx==0, mode='a')
